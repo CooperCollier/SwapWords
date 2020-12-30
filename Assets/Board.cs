@@ -38,6 +38,10 @@ public class Board : MonoBehaviour {
     /* Check wether the player has selected the first of 2 tiles to swap. */
     bool isTileSelected = false;
 
+    /* Check wether a swap has just been made so that the board doesn't look
+       for words on every single frame. */
+    bool boardHasChanged = false;
+
     //--------------------------------------------------------------------------------
 
     void Start() {
@@ -68,17 +72,13 @@ public class Board : MonoBehaviour {
                     secondTileX = selectedTile.locationX;
                     secondTileY = selectedTile.locationY;
 
-                    Debug.Log(firstTileX);
-                    Debug.Log(firstTileY);
-                    Debug.Log(secondTileX);
-                    Debug.Log(secondTileY);
-
                     if ((System.Math.Abs(secondTileX - firstTileX) 
                     	+ System.Math.Abs(secondTileY - firstTileY)) == 1) {
                         firstTile.SendMessage("Swap", new int[]{secondTileX, secondTileY});
                         secondTile.SendMessage("Swap", new int[]{firstTileX, firstTileY});
                         tiles[firstTileX, firstTileY] = secondTile;
                         tiles[secondTileX, secondTileY] = firstTile;
+                        boardHasChanged = true;
                     }
 
                     firstTile = null;
@@ -95,41 +95,53 @@ public class Board : MonoBehaviour {
             }
         }
 
-        string bestString = "";
+        if (boardHasChanged) {
+        	FindWords();
+        	boardHasChanged = false;
+        }
+
+    }
+
+    //--------------------------------------------------------------------------------
+
+    /* Checks if there are any english words on the board. */
+    void FindWords() {
+
+    	string bestString = "";
         int bestStringLength = 0;
         string testString = "";
         int testStringLength = 0;
 
-        Tile[] toDelete = {};
+        bool[,] toDelete = new bool[8, 8];
 
+        //Repeat this, but going by columns instead.
         for (int row = 0; row < 8; row += 1) {
-    		for (int col = 0; col < 8; col += 1) {
-    			testString = tiles[col, row].letter.ToString();
-    			for (int square = 7; square > col + 2; square -= 1) {
-    				for (int nextTile = col; nextTile <= square; nextTile += 1) {
-
-    					testString += tiles[nextTile, row].letter.ToString();
-    					testStringLength = testString.Length;
-    					if ((testStringLength >= 4) && (testStringLength > bestStringLength)) {
-    						if (CheckForWord(testString)) {
-    							bestString = testString;
-    							bestStringLength = testStringLength;
+    		for (int startSquare = 0; startSquare < 5; startSquare += 1) {
+    			for (int nextSquare = startSquare; nextSquare < 8; nextSquare += 1) {
+    				testString += tiles[nextSquare, row].letter.ToString();
+    				testStringLength = testString.Length;
+    				if (testStringLength > bestStringLength && testStringLength > 3) {
+    					if (CheckForWord(testString)) {
+    						bestString = testString;
+    						bestStringLength =  testStringLength;
+    						for (int tile = startSquare; tile <= nextSquare; tile += 1) {
+    							toDelete[tile, row] = true;
     						}
     					}
-
-    				}
-    			}
-    			for (int square = 0; square > row + 2; square += 1) {
-    				for (int nextTile = row; nextTile >= 0; nextTile -= 1) {
-    					testString += tiles[row, nextTile].letter.ToString();
-
-
-
     				}
     			}
     		}
     	}
-        
+
+    	for (int row = 0; row < 8; row += 1) {
+    		for (int col = 0; col < 8; col += 1) {
+    			if (toDelete[row, col]) {
+    				Tile tileToDelete = tiles[row, col];
+    				tileToDelete.GetComponent<SpriteRenderer>().color = Color.red;
+    			}
+    		}
+    	}
+
     }
 
     //--------------------------------------------------------------------------------
@@ -142,8 +154,6 @@ public class Board : MonoBehaviour {
     		}
     	}
     }
-
-    //--------------------------------------------------------------------------------
 
     /* Pick a random letter tile. */
     Tile GenerateRandomTile(int locationX, int locationY) {
@@ -165,7 +175,11 @@ public class Board : MonoBehaviour {
 
     /* Returns wether or not the supplied string is an english word. */
     bool CheckForWord(string testString) {
-    	return false;
+    	if (testString == "Rock" || testString == "Rocks") {
+    		return true;
+    	} else {
+    		return false;
+    	}
     }
 
     //--------------------------------------------------------------------------------
