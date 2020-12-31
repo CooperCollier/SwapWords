@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using static System.Math;
+using System.Collections;
 
 public class Board : MonoBehaviour {
 
@@ -42,11 +43,20 @@ public class Board : MonoBehaviour {
        for words on every single frame. */
     bool boardHasChanged = false;
 
+    /* A hash table used to store all the dictionary words. */
+    Hashtable hashTable;
+
     //--------------------------------------------------------------------------------
 
     void Start() {
         camera = Camera.main;
     	GenerateStartingBoard();
+    	hashTable = new Hashtable();
+    	string[] lines = System.IO.File.ReadAllLines("Assets/allWords.txt");
+    	foreach (string line in lines) {
+    		hashTable.Add(line, true);
+    	}
+
     }
 
     //--------------------------------------------------------------------------------
@@ -116,28 +126,48 @@ public class Board : MonoBehaviour {
 
         //Repeat this, but going by columns instead.
         for (int row = 0; row < 8; row += 1) {
-    		for (int startSquare = 0; startSquare < 5; startSquare += 1) {
+
+    		for (int startSquare = 0; startSquare < 6; startSquare += 1) {
+
+    			// Move this outside to the previous for loop?
+    			bestString = ""; 
+        		bestStringLength = 0;
+        		testString = "";
+        		testStringLength = 0;
+
     			for (int nextSquare = startSquare; nextSquare < 8; nextSquare += 1) {
+
     				testString += tiles[nextSquare, row].letter.ToString();
     				testStringLength = testString.Length;
-    				if (testStringLength > bestStringLength && testStringLength > 3) {
+
+    				if (testStringLength > bestStringLength && testStringLength > 2) {
+
     					if (CheckForWord(testString)) {
+
     						bestString = testString;
-    						bestStringLength =  testStringLength;
+    						bestStringLength = testStringLength;
     						for (int tile = startSquare; tile <= nextSquare; tile += 1) {
     							toDelete[tile, row] = true;
     						}
+
     					}
+
     				}
+
     			}
+
     		}
+
     	}
 
     	for (int row = 0; row < 8; row += 1) {
     		for (int col = 0; col < 8; col += 1) {
-    			if (toDelete[row, col]) {
-    				Tile tileToDelete = tiles[row, col];
+    			if (toDelete[col, row]) {
+    				Tile tileToDelete = tiles[col, row];
     				tileToDelete.GetComponent<SpriteRenderer>().color = Color.red;
+    			} else {
+    				Tile tileToPreserve = tiles[col, row];
+    				tileToPreserve.GetComponent<SpriteRenderer>().color = Color.white;
     			}
     		}
     	}
@@ -175,7 +205,7 @@ public class Board : MonoBehaviour {
 
     /* Returns wether or not the supplied string is an english word. */
     bool CheckForWord(string testString) {
-    	if (testString == "Rock" || testString == "Rocks") {
+    	if (hashTable.ContainsKey(testString)) {
     		return true;
     	} else {
     		return false;
