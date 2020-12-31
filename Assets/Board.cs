@@ -7,20 +7,6 @@ using System.Collections;
 
 public class Board : MonoBehaviour {
 
-    /* Gameplay loop:
-     * 1: WaitForInput
-     * The game is waiting for the player to complete a move.
-     * 2: MoveTiles
-     * The game is swapping the two tiles chosen by the player. 
-     * The tile-swap animation plays, and then the locations of the two tiles are updated.
-     * 3: CheckForWords
-     * The game checks if there are any words on the board, and removes them.
-     * If there are no words, return to state 1.
-     * 4: DropTiles
-     * The game checks if any tiles are 'floating', and drops them.
-     * Return to state 3.
-     */
-
 	//--------------------------------------------------------------------------------
 
     /* Two arrays with the possible letters in the game and the score associated
@@ -53,16 +39,20 @@ public class Board : MonoBehaviour {
     /* Check wether the player has selected the first of 2 tiles to swap. */
     bool isTileSelected = false;
 
+    /* Check wether to delete a tile because it is forming a word. */
+    bool[,] toDelete = new bool[8, 8];
+
     /* A hash table used to store all the dictionary words. */
     Hashtable hashTable;
 
     /* Records the current state of the board at each turn. */
-    enum State { GetInput, TilesMoving, FindWords, DropTiles }
+    enum State { GetInput, TilesMoving, FindWords, ClearWords, DropTiles }
     State currentState;
 
     //--------------------------------------------------------------------------------
 
     void Start() {
+    	Random.seed = 100;
         camera = Camera.main;
     	GenerateStartingBoard();
     	hashTable = new Hashtable();
@@ -88,10 +78,14 @@ public class Board : MonoBehaviour {
         
     	if (currentState == State.FindWords) {
         	if (FindWords()) {
-        		currentState = State.DropTiles;
+        		currentState = State.ClearWords;
         	} else {
         		currentState = State.GetInput;
         	}
+        }
+
+        if (currentState == State.ClearWords) {
+        	StartCoroutine(ClearWords());
         }
 
         if (currentState == State.DropTiles) {
@@ -168,12 +162,12 @@ public class Board : MonoBehaviour {
 
     	bool returnValue = false;
 
-    	bool[,] toDelete = new bool[8, 8];
-
     	string bestString = "";
         int bestStringLength = 0;
         string testString = "";
         int testStringLength = 0;
+
+        //TODO: Fix 'TWOW' detection?
 
         // TODO: Repeat this, but going by columns instead.
         for (int row = 0; row < 8; row += 1) {
@@ -208,6 +202,7 @@ public class Board : MonoBehaviour {
     						for (int tile = startSquare; tile <= nextSquare; tile += 1) {
     							toDelete[tile, row] = true;
     							tiles[tile, row].GetComponent<SpriteRenderer>().color = Color.green;
+    							returnValue = true;
     						}
 
     					}
@@ -220,18 +215,22 @@ public class Board : MonoBehaviour {
 
     	}
 
+    	return returnValue;
+    }
+
+    IEnumerator ClearWords() {
+    	yield return new WaitForSeconds(1);
     	for (int row = 0; row < 8; row += 1) {
     		for (int col = 0; col < 8; col += 1) {
     			if (toDelete[col, row]) {
-    				returnValue = true;
     				Tile tileToDelete = tiles[col, row];
     				Destroy(tileToDelete.gameObject);
     				tiles[col, row] = null;
     			}
     		}
     	}
-
-    	return returnValue;
+    	toDelete = new bool[8, 8];
+    	currentState = State.DropTiles;
     }
 
 
@@ -262,10 +261,13 @@ public class Board : MonoBehaviour {
 
     /* Make sure there are no words at the start of the game. */
     void StartingLoop() {
-    	while (FindWords()) {
+    	for (int i = 0; i < 5; i += 1) {
+    		FindWords();
     		for (int row = 0; row < 8; row += 1) {
     			for (int col = 0; col < 8; col += 1) {
-    				if (tiles[col, row] == null) {
+    				if (toDelete[col, row]) {
+    					Tile tileToDelete = tiles[col, row];
+    					Destroy(tileToDelete.gameObject);
     					tiles[col, row] = GenerateRandomTile(col, row);
     				}
     			}
