@@ -7,6 +7,20 @@ using System.Collections;
 
 public class Board : MonoBehaviour {
 
+    /* Gameplay loop:
+     * 1: WaitForInput
+     * The game is waiting for the player to complete a move.
+     * 2: MoveTiles
+     * The game is swapping the two tiles chosen by the player. 
+     * The tile-swap animation plays, and then the locations of the two tiles are updated.
+     * 3: CheckForWords
+     * The game checks if there are any words on the board, and removes them.
+     * If there are no words, return to state 1.
+     * 4: DropTiles
+     * The game checks if any tiles are 'floating', and drops them.
+     * Return to state 3.
+     */
+
 	//--------------------------------------------------------------------------------
 
     /* Two arrays with the possible letters in the game and the score associated
@@ -43,8 +57,18 @@ public class Board : MonoBehaviour {
        for words on every single frame. */
     bool boardHasChanged = false;
 
+    /* Check wether to keep running the FindWords() function. */
+    bool moreWords = true;
+
     /* A hash table used to store all the dictionary words. */
     Hashtable hashTable;
+
+    enum State {
+        WaitForInput,
+        MoveTiles,
+        CheckForWords,
+        DropTiles
+    }
 
     //--------------------------------------------------------------------------------
 
@@ -56,7 +80,8 @@ public class Board : MonoBehaviour {
     	foreach (string line in lines) {
     		hashTable.Add(line, true);
     	}
-
+        FindWords();
+        DropTiles();
     }
 
     //--------------------------------------------------------------------------------
@@ -73,6 +98,7 @@ public class Board : MonoBehaviour {
             if ((locationX >= 0 && locationX < 8) && (locationY >= 0 && locationY < 8)) {
 
                 Tile selectedTile = tiles[locationX, locationY];
+                if (selectedTile == null) { return; }
 
                 if (isTileSelected) {
 
@@ -104,18 +130,24 @@ public class Board : MonoBehaviour {
 
             }
         }
-
-        if (boardHasChanged) {
-        	FindWords();
+        
+        // Go between FindWords() and DropTiles() until all words are cleared.
+    	if (boardHasChanged) {
+        	moreWords = true;
+        	while (moreWords) {
+        		moreWords = FindWords();
+        	}
+        	DropTiles();
         	boardHasChanged = false;
         }
-
     }
 
     //--------------------------------------------------------------------------------
 
     /* Checks if there are any english words on the board. */
-    void FindWords() {
+    bool FindWords() {
+
+    	bool returnValue = false;
 
     	string bestString = "";
         int bestStringLength = 0;
@@ -135,7 +167,15 @@ public class Board : MonoBehaviour {
         		testString = "";
         		testStringLength = 0;
 
+        		if (tiles[startSquare, row] == null) {
+    				continue;
+    			}
+
     			for (int nextSquare = startSquare; nextSquare < 8; nextSquare += 1) {
+
+    				if (tiles[nextSquare, row] == null) {
+    					break;
+    				}
 
     				testString += tiles[nextSquare, row].letter.ToString();
     				testStringLength = testString.Length;
@@ -163,15 +203,39 @@ public class Board : MonoBehaviour {
     	for (int row = 0; row < 8; row += 1) {
     		for (int col = 0; col < 8; col += 1) {
     			if (toDelete[col, row]) {
+    				returnValue = true;
     				Tile tileToDelete = tiles[col, row];
-    				tileToDelete.GetComponent<SpriteRenderer>().color = Color.red;
-    			} else {
-    				Tile tileToPreserve = tiles[col, row];
-    				tileToPreserve.GetComponent<SpriteRenderer>().color = Color.white;
+    				Destroy(tileToDelete.gameObject);
+    				tiles[col, row] = null;
     			}
     		}
     	}
 
+    	return returnValue;
+
+    }
+
+    //--------------------------------------------------------------------------------
+
+    /* Makes tiles fall if the tiles beneath them vanish. */
+    void DropTiles() {
+    	for (int row = 1; row < 8; row += 1) {
+    		for (int col = 0; col < 8; col += 1) {
+
+    			if (tiles[col, row] != null && tiles[col, row-1] == null) {
+    				Tile tileToMove = tiles[col, row];
+    				int groundRow;
+    				for (groundRow = row; groundRow >= 0; groundRow -= 1) {
+    					if (groundRow == 0) { break; }
+    					if (tiles[col, groundRow-1] != null) { break; }
+    				}
+    				tileToMove.SendMessage("Fall", new int[]{col, groundRow});
+    				tiles[col, row] = null;
+    				tiles[col, groundRow] = tileToMove;
+    			}
+
+    		}
+    	}
     }
 
     //--------------------------------------------------------------------------------

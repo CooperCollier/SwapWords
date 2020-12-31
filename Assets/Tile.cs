@@ -22,12 +22,13 @@ public class Tile : MonoBehaviour {
     /* Check wether the game has started. The tile sets its letter and position beforehand. */
     bool gameStarted = false;
 
-    //--------------------------------------------------------------------------------
-
-    void Start() {
-
-        
-    }
+    /* True if the tile is currently moving. */
+    bool moving = false;
+    /* Used if moving = true, to get the tile to its destination. */
+    float destinationX;
+    float destinationY;
+    /* Speed multiplier to use while moving. */
+    float speed = 2f;
 
     //--------------------------------------------------------------------------------
 
@@ -37,14 +38,25 @@ public class Tile : MonoBehaviour {
             textObject = transform.GetChild(0).gameObject.transform.GetChild(0).gameObject;
             text = textObject.GetComponent<Text>();
             text.text = letter.ToString();
-            MoveTo(locationX, locationY);
+            transform.position = new Vector3(TileToWorldSpace(locationX), TileToWorldSpace(locationY), 0);
             gameStarted = true;
         }
-        
+
+        if (moving) {
+            Vector2 direction = new Vector2(destinationX - transform.position.x,
+                                            destinationY - transform.position.y);
+            if (direction.magnitude < 2f) {
+                moving = false;
+                transform.position = new Vector3(destinationX, destinationY, 0);
+            } else {
+                transform.Translate(direction * speed * Time.deltaTime);
+            }
+        }
     }
 
-    void MoveTo(int destinationX, int destinationY) {
-        transform.position = new Vector3((32 * destinationX - 12), (32 * destinationY - 12), 0);
+    /* Turns a coordinate like [3, 4] into a coordinate like [127.3, 224.8] */
+    float TileToWorldSpace(int location) {
+        return ((32 * location) - 12);
     }
 
     //--------------------------------------------------------------------------------
@@ -54,14 +66,16 @@ public class Tile : MonoBehaviour {
     void Swap(int[] destination) {
         locationX = destination[0];
         locationY = destination[1];
-        MoveTo(destination[0], destination[1]);
+        transform.position = new Vector3(TileToWorldSpace(locationX), TileToWorldSpace(locationY), 0);
     }
 
     //--------------------------------------------------------------------------------
 
     /* Causes this tile to fall down and land on the highest tile beneath it. */
-    void Fall(int destinationX, int destinationY) {
-
+    void Fall(int[] destination) {
+        locationX = destination[0];
+        locationY = destination[1];
+        transform.position = new Vector3(TileToWorldSpace(locationX), TileToWorldSpace(locationY), 0);
     }
 
     //--------------------------------------------------------------------------------
