@@ -9,18 +9,24 @@ public class Board : MonoBehaviour {
 
 	//--------------------------------------------------------------------------------
 
+    static int totalRows = 24;
+    static int totalCols = 8;
+
     /* Two arrays with the possible letters in the game and the score associated
      * with that letter. */
     char[] letters = new char[] {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
                                  'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
                                  'U', 'V', 'W', 'X', 'Y', 'Z'};
-    int[] scores = new int[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 
-                              11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 
-                              21, 22, 23, 24, 25, 26};
+    int[] scores = new int[] {1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 
+                              5, 1, 3, 1, 1, 3, 10, 1, 1, 1, 
+                              1, 4, 4, 8, 4, 10};
+    int[] amounts = new int[] {9, 2, 2, 4, 12, 2, 3, 2, 9, 1, 
+                              1, 4, 2, 6, 8, 2, 1, 6, 4, 6, 
+                              4, 2, 2, 1, 2, 1};               
 
 	/* A 2D array holding the tile GameObjects for the board. The lower left corner
 	 * is (0, 0) and the upper right corner is (7, 7). */
-	public Tile[,] tiles = new Tile[8, 8];
+	public Tile[,] tiles = new Tile[totalCols, totalRows];
 
 	/* Tile prefab to use for Instantiate() */
 	public Tile tile;
@@ -40,7 +46,7 @@ public class Board : MonoBehaviour {
     bool isTileSelected = false;
 
     /* Check wether to delete a tile because it is forming a word. */
-    bool[,] toDelete = new bool[8, 8];
+    bool[,] toDelete = new bool[totalCols, totalCols];
 
     /* Check is ClearWords() is currently running. */
     bool coroutineStarted = false;
@@ -52,10 +58,12 @@ public class Board : MonoBehaviour {
     enum State { GetInput, TilesMoving, FindWords, ClearWords, DropTiles }
     State currentState;
 
+    /* The player's total score. */
+    int score = 0;
+
     //--------------------------------------------------------------------------------
 
     void Start() {
-    	Random.seed = 100;
         camera = Camera.main;
     	GenerateStartingBoard();
     	hashTable = new Hashtable();
@@ -107,7 +115,7 @@ public class Board : MonoBehaviour {
         int locationX = (int) (shiftedPosition.x / 32);
         int locationY = (int) (shiftedPosition.y / 32);
 
-        if ((locationX >= 0 && locationX < 8) && (locationY >= 0 && locationY < 8)) {
+        if ((locationX >= 0 && locationX < totalCols) && (locationY >= 0 && locationY < totalCols)) {
 
             Tile selectedTile = tiles[locationX, locationY];
             if (selectedTile == null) { return; }
@@ -146,8 +154,8 @@ public class Board : MonoBehaviour {
     //--------------------------------------------------------------------------------
 
     void TilesMoving() {
-    	for (int row = 0; row < 8; row += 1) {
-    		for (int col = 0; col < 8; col += 1) {
+    	for (int row = 0; row < totalRows; row += 1) {
+    		for (int col = 0; col < totalCols; col += 1) {
     			Tile tile = tiles[col, row];
     			if (tile != null) {
     				if (tile.moving) {
@@ -163,7 +171,7 @@ public class Board : MonoBehaviour {
 
     bool FindWords() {
 
-    	toDelete = new bool[8, 8];
+    	toDelete = new bool[totalCols, totalCols];
 
     	bool returnValue = false;
 
@@ -175,9 +183,9 @@ public class Board : MonoBehaviour {
         //TODO: Fix 'TWOW' detection?
 
         // TODO: Repeat this, but going by columns instead.
-        for (int row = 0; row < 8; row += 1) {
+        for (int row = 0; row < totalCols; row += 1) {
 
-    		for (int startSquare = 0; startSquare < 6; startSquare += 1) {
+    		for (int startSquare = 0; startSquare < (totalCols-2); startSquare += 1) {
 
     			// Move this outside to the previous for loop?
     			bestString = ""; 
@@ -189,7 +197,7 @@ public class Board : MonoBehaviour {
     				continue;
     			}
 
-    			for (int nextSquare = startSquare; nextSquare < 8; nextSquare += 1) {
+    			for (int nextSquare = startSquare; nextSquare < totalCols; nextSquare += 1) {
 
     				if (tiles[nextSquare, row] == null) {
     					break;
@@ -227,8 +235,8 @@ public class Board : MonoBehaviour {
     IEnumerator ClearWords() {
     	coroutineStarted = true;
     	yield return new WaitForSeconds(1);
-    	for (int row = 0; row < 8; row += 1) {
-    		for (int col = 0; col < 8; col += 1) {
+    	for (int row = 0; row < totalCols; row += 1) {
+    		for (int col = 0; col < totalCols; col += 1) {
     			if (toDelete[col, row]) {
     				Tile tileToDelete = tiles[col, row];
     				Destroy(tileToDelete.gameObject);
@@ -236,7 +244,7 @@ public class Board : MonoBehaviour {
     			}
     		}
     	}
-    	toDelete = new bool[8, 8];
+    	toDelete = new bool[totalCols, totalCols];
     	currentState = State.DropTiles;
     	coroutineStarted = false;
     }
@@ -246,8 +254,8 @@ public class Board : MonoBehaviour {
     //--------------------------------------------------------------------------------
 
     void DropTiles() {
-    	for (int row = 1; row < 8; row += 1) {
-    		for (int col = 0; col < 8; col += 1) {
+    	for (int row = 1; row < totalRows; row += 1) {
+    		for (int col = 0; col < totalCols; col += 1) {
 
     			if (tiles[col, row] != null && tiles[col, row-1] == null) {
     				Tile tileToMove = tiles[col, row];
@@ -269,10 +277,10 @@ public class Board : MonoBehaviour {
 
     /* Make sure there are no words at the start of the game. */
     void StartingLoop() {
-    	for (int i = 0; i < 5; i += 1) {
+    	for (int i = 0; i < (totalCols-3); i += 1) {
     		FindWords();
-    		for (int row = 0; row < 8; row += 1) {
-    			for (int col = 0; col < 8; col += 1) {
+    		for (int row = 0; row < totalCols; row += 1) {
+    			for (int col = 0; col < totalCols; col += 1) {
     				if (toDelete[col, row]) {
     					Tile tileToDelete = tiles[col, row];
     					Destroy(tileToDelete.gameObject);
@@ -285,8 +293,8 @@ public class Board : MonoBehaviour {
 
     /* Randomly generate the board's starting state. */
     void GenerateStartingBoard() {
-    	for (int row = 0; row < 8; row += 1) {
-    		for (int col = 0; col < 8; col += 1) {
+    	for (int row = 0; row < totalRows; row += 1) {
+    		for (int col = 0; col < totalCols; col += 1) {
     			tiles[col, row] = GenerateRandomTile(col, row);
     		}
     	}
@@ -295,7 +303,14 @@ public class Board : MonoBehaviour {
     /* Pick a random letter tile. */
     Tile GenerateRandomTile(int locationX, int locationY) {
     	Tile newTile = (Tile) Instantiate(tile);
-        int randomNumber = Random.Range(0, 26);
+        int randomNumber1 = Random.Range(0, 26);
+        int randomNumber2 = Random.Range(0, 26);
+        int randomNumber;
+        if (amounts[randomNumber2] > amounts[randomNumber1]) {
+        	randomNumber = randomNumber2;
+        } else {
+        	randomNumber = randomNumber1;
+        }
     	newTile.letter = letters[randomNumber];
     	newTile.points = scores[randomNumber];
     	newTile.locationX = locationX;
@@ -318,7 +333,7 @@ public class Board : MonoBehaviour {
 
     	string message = "";
 
-    	for (int row = 0; row < 8; row += 1) {
+    	for (int row = 0; row < totalRows; row += 1) {
     		message += " [ ";
     		for (int col = 0; col < 8; col += 1) {
 
