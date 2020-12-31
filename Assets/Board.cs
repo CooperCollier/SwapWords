@@ -58,8 +58,8 @@ public class Board : MonoBehaviour {
     enum State { GetInput, TilesMoving, FindWords, ClearWords, DropTiles }
     State currentState;
 
-    /* The player's total score. */
-    int score = 0;
+    public static int score;
+    public static int movesRemaining = 40;
 
     //--------------------------------------------------------------------------------
 
@@ -135,6 +135,7 @@ public class Board : MonoBehaviour {
                     tiles[firstTileX, firstTileY] = secondTile;
                     tiles[secondTileX, secondTileY] = firstTile;
                     currentState = State.TilesMoving;
+                    movesRemaining -= 1;
                 }
 
                 firstTile = null;
@@ -232,6 +233,8 @@ public class Board : MonoBehaviour {
 
     }
 
+    //--------------------------------------------------------------------------------
+
     IEnumerator ClearWords() {
     	coroutineStarted = true;
     	yield return new WaitForSeconds(1);
@@ -239,6 +242,7 @@ public class Board : MonoBehaviour {
     		for (int col = 0; col < totalCols; col += 1) {
     			if (toDelete[col, row]) {
     				Tile tileToDelete = tiles[col, row];
+                    score += tileToDelete.points;
     				Destroy(tileToDelete.gameObject);
     				tiles[col, row] = null;
     			}
@@ -248,8 +252,6 @@ public class Board : MonoBehaviour {
     	currentState = State.DropTiles;
     	coroutineStarted = false;
     }
-
-
 
     //--------------------------------------------------------------------------------
 
@@ -325,6 +327,14 @@ public class Board : MonoBehaviour {
     	} else {
     		return false;
     	}
+    }
+
+    public int reportScore() {
+        return score;
+    }
+
+    public int reportMoves() {
+        return movesRemaining;
     }
 
     //--------------------------------------------------------------------------------
