@@ -42,6 +42,9 @@ public class Board : MonoBehaviour {
     /* Check wether to delete a tile because it is forming a word. */
     bool[,] toDelete = new bool[8, 8];
 
+    /* Check is ClearWords() is currently running. */
+    bool coroutineStarted = false;
+
     /* A hash table used to store all the dictionary words. */
     Hashtable hashTable;
 
@@ -84,7 +87,7 @@ public class Board : MonoBehaviour {
         	}
         }
 
-        if (currentState == State.ClearWords) {
+        if (currentState == State.ClearWords && !coroutineStarted) {
         	StartCoroutine(ClearWords());
         }
 
@@ -160,6 +163,8 @@ public class Board : MonoBehaviour {
 
     bool FindWords() {
 
+    	toDelete = new bool[8, 8];
+
     	bool returnValue = false;
 
     	string bestString = "";
@@ -216,9 +221,11 @@ public class Board : MonoBehaviour {
     	}
 
     	return returnValue;
+
     }
 
     IEnumerator ClearWords() {
+    	coroutineStarted = true;
     	yield return new WaitForSeconds(1);
     	for (int row = 0; row < 8; row += 1) {
     		for (int col = 0; col < 8; col += 1) {
@@ -231,6 +238,7 @@ public class Board : MonoBehaviour {
     	}
     	toDelete = new bool[8, 8];
     	currentState = State.DropTiles;
+    	coroutineStarted = false;
     }
 
 
@@ -316,12 +324,9 @@ public class Board : MonoBehaviour {
 
     			message += ",";
 
-    			Tile tile = tiles[col, row];
-    			if (tile != null) {
-    				message += tile.letter.ToString();
-    			} else {
-    				message += "0";
-    			}
+    			bool tile = toDelete[col, row];
+    			
+    			message += tile;
 
     			message += ",";
 
