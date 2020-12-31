@@ -53,22 +53,15 @@ public class Board : MonoBehaviour {
     /* Check wether the player has selected the first of 2 tiles to swap. */
     bool isTileSelected = false;
 
-    /* Check wether a swap has just been made so that the board doesn't look
-       for words on every single frame. */
-    bool boardHasChanged = false;
-
-    /* Check wether to keep running the FindWords() function. */
-    bool moreWords = true;
+    /* Check wether the most recent call to FindWords() found any words. */
+    bool foundWords = false;
 
     /* A hash table used to store all the dictionary words. */
     Hashtable hashTable;
 
-    enum State {
-        WaitForInput,
-        MoveTiles,
-        CheckForWords,
-        DropTiles
-    }
+    /* Records the current state of the board at each turn. */
+    enum State { GetInput, TilesMoving, FindWords, DropTiles }
+    State currentState;
 
     //--------------------------------------------------------------------------------
 
@@ -80,74 +73,103 @@ public class Board : MonoBehaviour {
     	foreach (string line in lines) {
     		hashTable.Add(line, true);
     	}
-        FindWords();
-        DropTiles();
+    	StartingLoop();
+        currentState = State.GetInput;
     }
 
     //--------------------------------------------------------------------------------
 
     void Update() {
 
-    	if (Input.GetMouseButtonDown(0)) {
+    	if (Input.GetMouseButtonDown(0) && (currentState == State.GetInput)) {
+    		GetInput();  
+        }
 
-            Vector3 position = camera.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 shiftedPosition = new Vector2(position.x + 32, position.y + 32);
-            int locationX = (int) (shiftedPosition.x / 32);
-            int locationY = (int) (shiftedPosition.y / 32);
-
-            if ((locationX >= 0 && locationX < 8) && (locationY >= 0 && locationY < 8)) {
-
-                Tile selectedTile = tiles[locationX, locationY];
-                if (selectedTile == null) { return; }
-
-                if (isTileSelected) {
-
-                	firstTile.GetComponent<SpriteRenderer>().color = Color.white;
-                    isTileSelected = false;
-                    secondTile = selectedTile;
-                    secondTileX = selectedTile.locationX;
-                    secondTileY = selectedTile.locationY;
-
-                    if ((System.Math.Abs(secondTileX - firstTileX) 
-                    	+ System.Math.Abs(secondTileY - firstTileY)) == 1) {
-                        firstTile.SendMessage("Swap", new int[]{secondTileX, secondTileY});
-                        secondTile.SendMessage("Swap", new int[]{firstTileX, firstTileY});
-                        tiles[firstTileX, firstTileY] = secondTile;
-                        tiles[secondTileX, secondTileY] = firstTile;
-                        boardHasChanged = true;
-                    }
-
-                    firstTile = null;
-                    secondTile = null;
-
-                } else {
-                    isTileSelected = true;
-                    firstTile = selectedTile;
-                    firstTileX = selectedTile.locationX;
-                    firstTileY = selectedTile.locationY;
-                    firstTile.GetComponent<SpriteRenderer>().color = Color.cyan;
-                }
-
-            }
+        if (currentState == State.TilesMoving) {
+        	TilesMoving();
         }
         
-        // Go between FindWords() and DropTiles() until all words are cleared.
-    	if (boardHasChanged) {
-        	moreWords = true;
-        	while (moreWords) {
-        		moreWords = FindWords();
+    	if (currentState == State.FindWords) {
+        	StartCoroutine(FindWords());
+        	if (foundWords) {
+        		currentState = State.DropTiles;
+        	} else {
+        		foundWords = false;
+        		currentState = State.GetInput;
         	}
+        }
+
+        if (currentState == State.DropTiles) {
         	DropTiles();
-        	boardHasChanged = false;
+        	currentState = State.TilesMoving;
+        }
+
+    }
+
+    //--------------------------------------------------------------------------------
+
+    void GetInput() {
+
+    	Vector3 position = camera.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 shiftedPosition = new Vector2(position.x + 32, position.y + 32);
+        int locationX = (int) (shiftedPosition.x / 32);
+        int locationY = (int) (shiftedPosition.y / 32);
+
+        if ((locationX >= 0 && locationX < 8) && (locationY >= 0 && locationY < 8)) {
+
+            Tile selectedTile = tiles[locationX, locationY];
+            if (selectedTile == null) { return; }
+
+            if (isTileSelected) {
+
+            	firstTile.GetComponent<SpriteRenderer>().color = Color.white;
+                isTileSelected = false;
+                secondTile = selectedTile;
+                secondTileX = selectedTile.locationX;
+                secondTileY = selectedTile.locationY;
+
+                if ((System.Math.Abs(secondTileX - firstTileX) 
+                    + System.Math.Abs(secondTileY - firstTileY)) == 1) {
+                    firstTile.SendMessage("Move", new int[]{secondTileX, secondTileY});
+                    secondTile.SendMessage("Move", new int[]{firstTileX, firstTileY});
+                    tiles[firstTileX, firstTileY] = secondTile;
+                    tiles[secondTileX, secondTileY] = firstTile;
+                    currentState = State.TilesMoving;
+                }
+
+                firstTile = null;
+                secondTile = null;
+
+            } else {
+                isTileSelected = true;
+                firstTile = selectedTile;
+                firstTileX = selectedTile.locationX;
+                firstTileY = selectedTile.locationY;
+                firstTile.GetComponent<SpriteRenderer>().color = Color.cyan;
+            }
+
         }
     }
 
     //--------------------------------------------------------------------------------
 
-    /* Checks if there are any english words on the board. */
-    bool FindWords() {
+    void TilesMoving() {
+    	for (int row = 0; row < 8; row += 1) {
+    		for (int col = 0; col < 8; col += 1) {
+    			Tile tile = tiles[col, row];
+    			if (tile != null) {
+    				if (tile.moving) {
+    					return;
+    				}
+    			}
+    		}
+    	}
+    	currentState = State.FindWords;
+    }
 
-    	bool returnValue = false;
+    //--------------------------------------------------------------------------------
+
+    IEnumerator FindWords() {
 
     	string bestString = "";
         int bestStringLength = 0;
@@ -156,7 +178,7 @@ public class Board : MonoBehaviour {
 
         bool[,] toDelete = new bool[8, 8];
 
-        //Repeat this, but going by columns instead.
+        // TODO: Repeat this, but going by columns instead.
         for (int row = 0; row < 8; row += 1) {
 
     		for (int startSquare = 0; startSquare < 6; startSquare += 1) {
@@ -188,6 +210,7 @@ public class Board : MonoBehaviour {
     						bestStringLength = testStringLength;
     						for (int tile = startSquare; tile <= nextSquare; tile += 1) {
     							toDelete[tile, row] = true;
+    							tiles[tile, row].GetComponent<SpriteRenderer>().color = Color.green;
     						}
 
     					}
@@ -200,10 +223,13 @@ public class Board : MonoBehaviour {
 
     	}
 
+    	yield return new WaitForSeconds(1);
+
+    	foundWords = false;
     	for (int row = 0; row < 8; row += 1) {
     		for (int col = 0; col < 8; col += 1) {
     			if (toDelete[col, row]) {
-    				returnValue = true;
+    				foundWords = true;
     				Tile tileToDelete = tiles[col, row];
     				Destroy(tileToDelete.gameObject);
     				tiles[col, row] = null;
@@ -211,13 +237,10 @@ public class Board : MonoBehaviour {
     		}
     	}
 
-    	return returnValue;
-
     }
 
     //--------------------------------------------------------------------------------
 
-    /* Makes tiles fall if the tiles beneath them vanish. */
     void DropTiles() {
     	for (int row = 1; row < 8; row += 1) {
     		for (int col = 0; col < 8; col += 1) {
@@ -229,7 +252,7 @@ public class Board : MonoBehaviour {
     					if (groundRow == 0) { break; }
     					if (tiles[col, groundRow-1] != null) { break; }
     				}
-    				tileToMove.SendMessage("Fall", new int[]{col, groundRow});
+    				tileToMove.SendMessage("Move", new int[]{col, groundRow});
     				tiles[col, row] = null;
     				tiles[col, groundRow] = tileToMove;
     			}
@@ -239,6 +262,21 @@ public class Board : MonoBehaviour {
     }
 
     //--------------------------------------------------------------------------------
+
+    /* Make sure there are no words at the start of the game. */
+    void StartingLoop() {
+    	foundWords = true;
+    	while (foundWords) {
+    		StartCoroutine(FindWords());
+    		for (int row = 0; row < 8; row += 1) {
+    			for (int col = 0; col < 8; col += 1) {
+    				if (tiles[col, row] == null) {
+    					tiles[col, row] = GenerateRandomTile(col, row);
+    				}
+    			}
+    		}
+    	}
+    }
 
     /* Randomly generate the board's starting state. */
     void GenerateStartingBoard() {
@@ -251,21 +289,14 @@ public class Board : MonoBehaviour {
 
     /* Pick a random letter tile. */
     Tile GenerateRandomTile(int locationX, int locationY) {
-
     	Tile newTile = (Tile) Instantiate(tile);
-
         int randomNumber = Random.Range(0, 26);
     	newTile.letter = letters[randomNumber];
     	newTile.points = scores[randomNumber];
-
     	newTile.locationX = locationX;
     	newTile.locationY = locationY;
-
     	return newTile;
-
     }
-
-    //--------------------------------------------------------------------------------
 
     /* Returns wether or not the supplied string is an english word. */
     bool CheckForWord(string testString) {
@@ -274,6 +305,34 @@ public class Board : MonoBehaviour {
     	} else {
     		return false;
     	}
+    }
+
+    //--------------------------------------------------------------------------------
+
+    void PrintBoard() {
+
+    	string message = "";
+
+    	for (int row = 0; row < 8; row += 1) {
+    		message += " [ ";
+    		for (int col = 0; col < 8; col += 1) {
+
+    			message += ",";
+
+    			Tile tile = tiles[col, row];
+    			if (tile != null) {
+    				message += tile.letter.ToString();
+    			} else {
+    				message += "0";
+    			}
+
+    			message += ",";
+
+    		}
+    		message += " ] ";
+    	}
+
+    	Debug.Log(message);
     }
 
     //--------------------------------------------------------------------------------

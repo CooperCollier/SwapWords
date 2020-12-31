@@ -19,16 +19,17 @@ public class Tile : MonoBehaviour {
 	public GameObject textObject;
 	public Text text;
 
+    /* True if the tile is currently moving. */
+    public bool moving = false;
+
     /* Check wether the game has started. The tile sets its letter and position beforehand. */
     bool gameStarted = false;
 
-    /* True if the tile is currently moving. */
-    bool moving = false;
     /* Used if moving = true, to get the tile to its destination. */
     float destinationX;
     float destinationY;
     /* Speed multiplier to use while moving. */
-    float speed = 2f;
+    float speed = 3f;
 
     //--------------------------------------------------------------------------------
 
@@ -52,6 +53,7 @@ public class Tile : MonoBehaviour {
                 transform.Translate(direction * speed * Time.deltaTime);
             }
         }
+
     }
 
     /* Turns a coordinate like [3, 4] into a coordinate like [127.3, 224.8] */
@@ -61,21 +63,15 @@ public class Tile : MonoBehaviour {
 
     //--------------------------------------------------------------------------------
 
-    /* Moves this tile onto another square. Swap() has also been called on the tile
-     * moving out of that square. */
-    void Swap(int[] destination) {
+    /* Moves this tile onto another square. */
+    void Move(int[] destination) {
         locationX = destination[0];
         locationY = destination[1];
-        transform.position = new Vector3(TileToWorldSpace(locationX), TileToWorldSpace(locationY), 0);
-    }
+        destinationX = TileToWorldSpace(destination[0]);
+        destinationY = TileToWorldSpace(destination[1]);
+        moving = true;
 
-    //--------------------------------------------------------------------------------
-
-    /* Causes this tile to fall down and land on the highest tile beneath it. */
-    void Fall(int[] destination) {
-        locationX = destination[0];
-        locationY = destination[1];
-        transform.position = new Vector3(TileToWorldSpace(locationX), TileToWorldSpace(locationY), 0);
+        //Debug.Log(letter.ToString() + " " + destination[0].ToString() + destination[1].ToString());
     }
 
     //--------------------------------------------------------------------------------
