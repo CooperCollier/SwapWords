@@ -53,9 +53,6 @@ public class Board : MonoBehaviour {
     /* Check wether the player has selected the first of 2 tiles to swap. */
     bool isTileSelected = false;
 
-    /* Check wether the most recent call to FindWords() found any words. */
-    bool foundWords = false;
-
     /* A hash table used to store all the dictionary words. */
     Hashtable hashTable;
 
@@ -90,11 +87,9 @@ public class Board : MonoBehaviour {
         }
         
     	if (currentState == State.FindWords) {
-        	StartCoroutine(FindWords());
-        	if (foundWords) {
+        	if (FindWords()) {
         		currentState = State.DropTiles;
         	} else {
-        		foundWords = false;
         		currentState = State.GetInput;
         	}
         }
@@ -169,14 +164,16 @@ public class Board : MonoBehaviour {
 
     //--------------------------------------------------------------------------------
 
-    IEnumerator FindWords() {
+    bool FindWords() {
+
+    	bool returnValue = false;
+
+    	bool[,] toDelete = new bool[8, 8];
 
     	string bestString = "";
         int bestStringLength = 0;
         string testString = "";
         int testStringLength = 0;
-
-        bool[,] toDelete = new bool[8, 8];
 
         // TODO: Repeat this, but going by columns instead.
         for (int row = 0; row < 8; row += 1) {
@@ -223,13 +220,10 @@ public class Board : MonoBehaviour {
 
     	}
 
-    	yield return new WaitForSeconds(1);
-
-    	foundWords = false;
     	for (int row = 0; row < 8; row += 1) {
     		for (int col = 0; col < 8; col += 1) {
     			if (toDelete[col, row]) {
-    				foundWords = true;
+    				returnValue = true;
     				Tile tileToDelete = tiles[col, row];
     				Destroy(tileToDelete.gameObject);
     				tiles[col, row] = null;
@@ -237,7 +231,10 @@ public class Board : MonoBehaviour {
     		}
     	}
 
+    	return returnValue;
     }
+
+
 
     //--------------------------------------------------------------------------------
 
@@ -265,9 +262,7 @@ public class Board : MonoBehaviour {
 
     /* Make sure there are no words at the start of the game. */
     void StartingLoop() {
-    	foundWords = true;
-    	while (foundWords) {
-    		StartCoroutine(FindWords());
+    	while (FindWords()) {
     		for (int row = 0; row < 8; row += 1) {
     			for (int col = 0; col < 8; col += 1) {
     				if (tiles[col, row] == null) {
