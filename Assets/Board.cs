@@ -59,7 +59,8 @@ public class Board : MonoBehaviour {
     State currentState;
 
     public static int score;
-    public static int movesRemaining = 40;
+    public static int movesRemaining = 5;
+    public static bool finished = false;
 
     //--------------------------------------------------------------------------------
 
@@ -78,6 +79,11 @@ public class Board : MonoBehaviour {
     //--------------------------------------------------------------------------------
 
     void Update() {
+
+        if (movesRemaining <= 0 && currentState == State.GetInput) {
+            finished = true;
+            return;
+        }
 
     	if (Input.GetMouseButtonDown(0) && (currentState == State.GetInput)) {
     		GetInput();  
@@ -335,6 +341,10 @@ public class Board : MonoBehaviour {
 
     public int reportMoves() {
         return movesRemaining;
+    }
+
+    public bool reportFinished() {
+        return finished;
     }
 
     //--------------------------------------------------------------------------------

@@ -22,30 +22,44 @@ public class UI : MonoBehaviour {
 	[SerializeField]
 	public Board board;
 
+	public GameObject endCard;
+	public GameObject endText;
+	public GameObject menuButton;
+	public GameObject menuButton2;
+
     //--------------------------------------------------------------------------------
 
     void Start() {
+    	endCard.SetActive(false);
         finished = false;
     }
 
     void Update() {
+    	if (finished) {return;}
     	score = board.reportScore();
+    	bool lastMove = board.reportFinished();
     	scoreText.GetComponent<Text>().text = "Score: " + score.ToString();
     	movesRemaining = board.reportMoves();
     	movesText.GetComponent<Text>().text = "Moves: " + movesRemaining.ToString();
-    	if (movesRemaining <= 0) {
+    	if (movesRemaining <= 0 && lastMove) {
     		finished = true;
-    		ShowEndCard();
+    		StartCoroutine(ShowEndCard());
     	}
     }
 
     //--------------------------------------------------------------------------------
 
-    void ShowEndCard() {
+    IEnumerator ShowEndCard() {
+    	yield return new WaitForSeconds(1);
+    	endCard.SetActive(true);
+    	menuButton2.SetActive(false);
+    	endText.GetComponent<Text>().text = "You got " + score.ToString() + " points!";
     	Time.timeScale = 0f;
+    }
 
-    	// Show End Card...
-        
+    void Menu() {
+    	Time.timeScale = 1f;
+    	SceneManager.LoadScene(0);
     }
 
     //--------------------------------------------------------------------------------
