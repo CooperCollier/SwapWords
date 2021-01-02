@@ -19,9 +19,11 @@ public class ButtonManager : MonoBehaviour {
 	/* Check whether the game is finished. */
 	public static bool finished;
 
+    /* The board that reports score and moves remaining to this script. */
 	[SerializeField]
 	public Board board;
 
+    /* UI Objects from the canvas. */
 	public GameObject endCard;
 	public GameObject endText;
 	public GameObject menuButton;
@@ -36,16 +38,20 @@ public class ButtonManager : MonoBehaviour {
     }
 
     void Update() {
+
     	if (finished) {return;}
-    	score = board.reportScore();
-    	bool lastMove = board.reportFinished();
+
+    	score = board.ReportScore();
     	scoreText.GetComponent<Text>().text = "Score: " + score.ToString();
-    	movesRemaining = board.reportMoves();
+
+    	movesRemaining = board.ReportMoves();
     	movesText.GetComponent<Text>().text = "Moves: " + movesRemaining.ToString();
-    	if (movesRemaining <= 0 && lastMove) {
+
+    	if (board.CheckIfGameFinished()) {
     		finished = true;
     		StartCoroutine(ShowEndCard());
     	}
+
     }
 
     //--------------------------------------------------------------------------------
