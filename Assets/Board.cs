@@ -59,8 +59,8 @@ public class Board : MonoBehaviour {
     State currentState;
 
     public static int score;
-    public static int movesRemaining = 5;
-    public static bool finished = false;
+    public static int movesRemaining;
+    public static bool finished;
 
     //--------------------------------------------------------------------------------
 
@@ -74,6 +74,10 @@ public class Board : MonoBehaviour {
     	}
     	StartingLoop();
         currentState = State.GetInput;
+
+        movesRemaining = 40;
+        finished = false;
+        score = 0;
     }
 
     //--------------------------------------------------------------------------------
@@ -189,7 +193,6 @@ public class Board : MonoBehaviour {
 
         //TODO: Fix 'TWOW' detection?
 
-        // TODO: Repeat this, but going by columns instead.
         for (int row = 0; row < totalCols; row += 1) {
 
     		for (int startSquare = 0; startSquare < (totalCols-2); startSquare += 1) {
@@ -236,6 +239,8 @@ public class Board : MonoBehaviour {
     	}
 
     	return returnValue;
+
+        // TODO: Add bonus multipliers for long words, or for eight-letter words.
 
     }
 
