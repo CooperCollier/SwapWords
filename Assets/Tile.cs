@@ -38,6 +38,7 @@ public class Tile : MonoBehaviour {
 
         if (!gameStarted) {
 
+            /* Run thos only once, on the first frame after the tile is created. */
             textObject = transform.GetChild(0).gameObject.transform.GetChild(0).gameObject;
             text = textObject.GetComponent<Text>();
             text.text = letter.ToString();
@@ -49,10 +50,12 @@ public class Tile : MonoBehaviour {
 
         if (moving) {
 
+            /* Moves the tile toward its destination, if it is moving. 
+             * Once the tile reaches its destination, report back to the board script
+             * that this tile is finished. */
             float xDirection = destinationX - transform.position.x;
             float yDirection = destinationY - transform.position.y;
             Vector2 direction = new Vector2(xDirection, yDirection);
-
             if (direction.magnitude < minimumDistance) {
                 moving = false;
                 transform.position = new Vector3(destinationX, destinationY, 0);
@@ -73,7 +76,7 @@ public class Tile : MonoBehaviour {
 
     //--------------------------------------------------------------------------------
 
-    /* Moves this tile onto another square. */
+    /* Begin the process of moving this tile onto another square. */
     void Move(int[] destination) {
         locationX = destination[0];
         locationY = destination[1];

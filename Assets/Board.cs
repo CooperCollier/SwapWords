@@ -69,6 +69,31 @@ public class Board : MonoBehaviour {
     enum State { GetInput, TilesMoving, FindWords, ClearWords, DropTiles }
     State currentState;
 
+    /* Description of each state:
+     * 1: GetInput
+     * The board is waiting for the user to finish selecting two tiles to swap.
+     * After this state, proceed to TilesMoving.
+     *
+     * 2: TilesMoving
+     * The board has told some tiles to move to new locations, and it is waiting
+     * for those tiles to report that they have finished moving. After this state,
+     * proceed to FindWords.
+     *
+     * 3: FindWords
+     * Check if there are any words formed on the board, and how many. If there are, 
+     * record their locations and proceed to ClearWords. Otherwise, return to GetInput.
+     * 
+     * 4: ClearWords
+     * Clear all tiles marked for deletion (tiles that are forming words). Record any
+     * score multipliers here as well. After this state, proceed to DropTiles.
+     * 
+     * 5: DropTiles
+     * Check which tiles have nothing underneath them, and compute where those tiles
+     * should fall down to. Then, tell those tiles to fall down. After this state,
+     * proceed to TilesMoving. 
+     *
+     */
+
     //--------------------------------------------------------------------------------
 
     /* Two tiles to swap when swapping letters */
@@ -348,28 +373,33 @@ public class Board : MonoBehaviour {
      * list where the first element is the index of the largest scoring word,
      * the second element is the index of the second-largest scoring word, etc.  */
     int[] SortWordsByScore(List<string> words_InThisRow) {
-    	
+
+    	/* Instantiate the return value. */
     	int[] sortedOrder = new int[words_InThisRow.Count];
 
+    	/* Use this to record what words we have already added to sortedOrder. */
     	bool[] removed = new bool[words_InThisRow.Count];
 
+    	/* Run this loop for every word in words_InThisRow, so we don't miss any. */
     	for (int repetitions = 0; repetitions < words_InThisRow.Count; repetitions += 1) {
 
+    		/* Walk through the loop, and keep checking for a word with a score
+    		 * greater than our running maximum. If we find one, update the 
+    		 * running maximum to reflect it. */
     		int maxScore = 0;
     		int indexOfMaxScoringWord = 0;
-
     		for (int index = 0; index < words_InThisRow.Count; index += 1) {
-
     			int score = GetScore(words_InThisRow[index]);
     			if (score > maxScore && !(removed[index])) {
     				indexOfMaxScoringWord = index;
     				maxScore = score;
     			}
-
     		}
 
+    		/* Add the largest-scoring word to sortedOrder. */
     		sortedOrder[repetitions] = indexOfMaxScoringWord;
     		removed[indexOfMaxScoringWord] = true;
+
     	}
 
     	return sortedOrder;
@@ -419,6 +449,8 @@ public class Board : MonoBehaviour {
 
     	yield return new WaitForSeconds(1);
 
+    	/* Go through every tile on the board, and delete it if it is
+    	 * marked for deletion. */
     	for (int row = 0; row < totalCols; row += 1) {
     		for (int col = 0; col < totalCols; col += 1) {
 
@@ -432,12 +464,14 @@ public class Board : MonoBehaviour {
     		}
     	}
 
+    	/* Add score multipliers. */
     	score += (wordsFoundDuringThisTurn - 1) * 10;
     	if (bingo) {
     		score += 50;
     		bingo = false;
     	}
 
+    	/* Reset toDelete so that it's all blank. */
     	toDelete = new bool[totalCols, totalCols];
     	currentState = State.DropTiles;
 
@@ -453,19 +487,23 @@ public class Board : MonoBehaviour {
      * tile below them. */
     void DropTiles() {
 
+    	/* Go through every square on the board. */
     	for (int row = 1; row < totalRows; row += 1) {
     		for (int col = 0; col < totalCols; col += 1) {
 
+    			/* Check if this tile has nothing supporting it below. */
     			if (tiles[col, row] != null && tiles[col, row-1] == null) {
 
     				Tile tileToMove = tiles[col, row];
     				int groundRow;
 
+    				/* Find the row that it will come to rest on after falling. */
     				for (groundRow = row; groundRow >= 0; groundRow -= 1) {
     					if (groundRow == 0) { break; }
     					if (tiles[col, groundRow-1] != null) { break; }
     				}
 
+    				/* Tell the tile to move. */
     				tileToMove.SendMessage("Move", new int[]{col, groundRow});
     				tiles[col, row] = null;
     				tiles[col, groundRow] = tileToMove;
@@ -484,21 +522,23 @@ public class Board : MonoBehaviour {
     /* Make sure there are no words at the start of the game. */
     void StartingLoop() {
 
-        int repetitions = 10;
-
+    	/* Repeat this loop several times. */
+        int repetitions = 8;
     	for (int i = 0; i < repetitions; i += 1) {
 
+    		/* Check if there are any words on the board, and mark them
+    		 * to be deleted. */
     		FindWords();
 
+    		/* If there are any words to be deleted, change their letter to
+    		 * something random. */
     		for (int row = 0; row < totalCols; row += 1) {
     			for (int col = 0; col < totalCols; col += 1) {
-
     				if (toDelete[col, row]) {
     					Tile tileToDelete = tiles[col, row];
     					Destroy(tileToDelete.gameObject);
     					tiles[col, row] = GenerateRandomTile(col, row);
     				}
-
     			}
     		}
 
@@ -528,6 +568,8 @@ public class Board : MonoBehaviour {
     }
 
     //--------------------------------------------------------------------------------
+
+ 	/* Functions that communicate with the ButtonManager script. */
 
     public int ReportScore() {
         return score;
