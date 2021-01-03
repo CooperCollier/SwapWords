@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using UnityEngine;
 using UnityEngine.UI;
 using static System.Math;
@@ -91,6 +92,12 @@ public class Board : MonoBehaviour {
     /* Check if ClearWords() is currently running, so it doesn't run twice. */
     bool wordsAreBeingCleared = false;
 
+    /* Record how many words were found on the board in this turn. */
+    int wordsFoundDuringThisTurn;
+
+    /* Check if the player made any eight-letter words. */
+    bool bingo = false;
+
     //--------------------------------------------------------------------------------
 
     void Start() {
@@ -131,7 +138,8 @@ public class Board : MonoBehaviour {
         }
         
     	if (currentState == State.FindWords) {
-        	if (FindWords()) {
+    		wordsFoundDuringThisTurn = FindWords();
+        	if (wordsFoundDuringThisTurn > 0) {
         		currentState = State.ClearWords;
         	} else {
         		currentState = State.GetInput;
@@ -231,56 +239,86 @@ public class Board : MonoBehaviour {
     //--------------------------------------------------------------------------------
 
     /* Check if there are any words formed on the board. If there are, record them in 
-     * the ToDelete array and return "true". */
-    bool FindWords() {
+     * the ToDelete array and return how many were found. */
+    int FindWords() {
 
         /* set the toDelete array to be all blank, and initialize the return value. */
     	toDelete = new bool[totalCols, totalCols];
-    	bool returnValue = false;
+    	int wordsFoundOnEntireBoard = 0;
 
-    	string bestString = "";
-        int bestStringLength = 0;
-        string testString = "";
-        int testStringLength = 0;
+    	/* Check if this string even forms a word at all. */
+        string testString;
 
+        /* Records all the possible words formed in this row, as well as their start and
+         * end tiles. */
+        OrderedDictionary wordsFoundInOneRow = new OrderedDictionary();
+        /* Records which tiles are still available in this row. The tiles are filled 
+         * up by highest-scoring word first. */
+        bool[] tilesFreeInOneRow = new bool[] {true, true, true, true, true, true, true, true};
+
+        /* Iterate through every row on the board. */
         for (int row = 0; row < totalCols; row += 1) {
 
+        	/* For each row, iterate through all possible starting squares in order
+        	 * to check every possible combination of tiles for a word. */
     		for (int startSquare = 0; startSquare < (totalCols-2); startSquare += 1) {
 
-    			// Move this outside to the previous for loop?
-    			bestString = ""; 
-        		bestStringLength = 0;
         		testString = "";
-        		testStringLength = 0;
 
-        		if (tiles[startSquare, row] == null) {
+        		if (tiles[startSquare, row] == null) { continue; }
+
+        		/* Continue building up squares and check if this is a word. */
+    			for (int nextSquare = startSquare; nextSquare < totalCols; nextSquare += 1) {
+
+    				if (tiles[nextSquare, row] == null) { break; }
+
+    				testString += tiles[nextSquare, row].letter.ToString();
+
+    				/* For each combination of tiles, check if it is a word. */
+    				if (testString.Length > 2 && CheckForWord(testString)) {
+    					wordsFoundInOneRow.Add(testString, new int[]{startSquare, nextSquare});
+    				}
+
+    			}
+
+    		}
+
+    		/* If there were no words found, we can just check the next row. */
+    		if (wordsFoundInOneRow.Count == 0) {
+    			continue;
+    		}
+
+    		/* Sort the words that were found so the highest-scoring word appears first. */
+    		wordsFoundInOneRow = SortDictionary(wordsFoundInOneRow);
+
+    		/* Iterate through the whole dictionary. */
+    		foreach(KeyValuePair<string, int[]> keyValuePair in wordsFoundInOneRow) {
+
+    			/* Unpack the values from the entry. */
+    			string word = keyValuePair.Key;
+    			int wordStart = keyValuePair.Value[0];
+    			int wordEnd = keyValuePair.Value[1];
+
+    			/* Make sure this word isn't overlapping with other words. */
+    			if (!CheckIfWordFits(wordStart, wordEnd, tilesFreeInOneRow)) {
     				continue;
     			}
 
-    			for (int nextSquare = startSquare; nextSquare < totalCols; nextSquare += 1) {
+    			/* Now that we've definitely found a word, set it to be deleted. */
+    			for (int tile = wordStart; tile <= wordEnd; tile += 1) {
 
-    				if (tiles[nextSquare, row] == null) {
-    					break;
+    				/* Update the toDelete and tilesFreeInOneRow arrays. */
+    				tilesFreeInOneRow[tile] = false;
+    				toDelete[tile, row] = true;
+    				tiles[tile, row].GetComponent<SpriteRenderer>().color = Color.green;
+
+    				/* Check if a bingo appeared. */
+    				if ((wordStart == 0) && (wordEnd == totalCols)) {
+    					bingo = true;
     				}
 
-    				testString += tiles[nextSquare, row].letter.ToString();
-    				testStringLength = testString.Length;
-
-    				if (testStringLength > bestStringLength && testStringLength > 2) {
-
-    					if (CheckForWord(testString)) {
-
-    						bestString = testString;
-    						bestStringLength = testStringLength;
-    						for (int tile = startSquare; tile <= nextSquare; tile += 1) {
-    							toDelete[tile, row] = true;
-    							tiles[tile, row].GetComponent<SpriteRenderer>().color = Color.green;
-    							returnValue = true;
-    						}
-
-    					}
-
-    				}
+    				/* update the final return value. */
+    				wordsFoundOnEntireBoard += 1;
 
     			}
 
@@ -288,11 +326,86 @@ public class Board : MonoBehaviour {
 
     	}
 
-    	return returnValue;
+    	return wordsFoundOnEntireBoard;
 
-        // TODO: Add bonus multipliers for long words, or for eight-letter words.
-        // TODO: Fix 'TWOW' detection?
+    }
 
+    //--------------------------------------------------------------------------------
+
+    /* Helper Functions for FindWords() */
+
+
+    /* Helper function that takes the wordsFoundInOneRow dictionary and returns it
+     * sorted with the highest-scoring word first. */
+    OrderedDictionary SortDictionary(OrderedDictionary wordsFoundInOneRow) {
+
+    	OrderedDictionary newDict = new OrderedDictionary();
+
+    	int maxScore = 0;
+    	KeyValuePair<string, int[]> maxScoringEntry;
+
+    	for (int i = 0; i < wordsFoundInOneRow.Count; i += 1) {
+
+    		maxScore = 0;
+
+    		string maxScoringWord;
+    		int maxScoringWordStart;
+    		int maxScoringWordEnd;
+
+    		foreach(KeyValuePair<string, int[]> keyValuePair in wordsFoundInOneRow) {
+
+    			string word = keyValuePair.Key;
+    			int score = GetScore(word);
+    			if (score > maxScore) {
+    				maxScore = score;
+    				maxScoringEntry = keyValuePair;
+    			}
+
+    		}
+
+    		maxScoringWord = maxScoringEntry.Key;
+    		maxScoringWordStart = maxScoringEntry.Value[0];
+    		maxScoringWordEnd = maxScoringEntry.Value[1];
+
+    		newDict.Add(maxScoringWord, new int[] {maxScoringWordStart, maxScoringWordEnd});
+    		wordsFoundInOneRow.RemoveAt(i);
+
+    	}
+
+    	return newDict;
+
+    }
+
+    /* Get the total score for a word. */
+    int GetScore(string word) {
+    	int score = 0;
+    	char[] arr = word.ToCharArray();
+    	for (int i = 0; i < arr.Length; i += 1) {
+    		int positionInAplhabet = (int) arr[i] - 64;
+    		score += scores[positionInAplhabet - 1];
+    	}
+    	return 0;
+    }
+
+    /* Checks if any squares between start and end are marked 'false' on
+     * the tilesFreeInOneRow array. If none are, return true. */
+    bool CheckIfWordFits(int start, int end, bool[] tilesFreeInOneRow) {
+    	for (int tile = start; tile <= end; tile += 1) {
+    		if (!tilesFreeInOneRow[tile]) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+
+    /* Returns wether or not the supplied string
+     * is an english word. */
+    bool CheckForWord(string testString) {
+    	if (hashTable.ContainsKey(testString)) {
+    		return true;
+    	} else {
+    		return false;
+    	}
     }
 
     //--------------------------------------------------------------------------------
@@ -319,8 +432,16 @@ public class Board : MonoBehaviour {
     		}
     	}
 
+    	score += (wordsFoundDuringThisTurn - 1) * 10;
+    	if (bingo) {
+    		score += 50;
+    	}
+
     	toDelete = new bool[totalCols, totalCols];
     	currentState = State.DropTiles;
+
+    	wordsFoundDuringThisTurn = 0;
+    	bingo = false;
 
     	wordsAreBeingCleared = false;
 
@@ -406,15 +527,6 @@ public class Board : MonoBehaviour {
     	newTile.locationX = locationX;
     	newTile.locationY = locationY;
     	return newTile;
-    }
-
-    /* Returns wether or not the supplied string is an english word. */
-    bool CheckForWord(string testString) {
-    	if (hashTable.ContainsKey(testString)) {
-    		return true;
-    	} else {
-    		return false;
-    	}
     }
 
     //--------------------------------------------------------------------------------
