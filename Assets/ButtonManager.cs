@@ -39,14 +39,18 @@ public class ButtonManager : MonoBehaviour {
 
     void Update() {
 
+        /* If the game is over, do nothing. */
     	if (finished) {return;}
 
+        /* Get the score from the board script. */
     	score = board.ReportScore();
     	scoreText.GetComponent<Text>().text = "Score: " + score.ToString();
 
+        /* Get the moves remaining from the board script. */
     	movesRemaining = board.ReportMoves();
     	movesText.GetComponent<Text>().text = "Moves: " + movesRemaining.ToString();
 
+        /* Check if the game is finished. If it is, show the end-card. */
     	if (board.CheckIfGameFinished()) {
     		finished = true;
     		StartCoroutine(ShowEndCard());
