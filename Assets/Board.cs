@@ -102,6 +102,8 @@ public class Board : MonoBehaviour {
 
     void Start() {
 
+    	Test();
+
         /* Intialize the camera */
         camera = Camera.main;
 
@@ -249,9 +251,11 @@ public class Board : MonoBehaviour {
     	/* Check if this string even forms a word at all. */
         string testString;
 
-        /* Records all the possible words formed in this row, as well as their start and
-         * end tiles. */
-        OrderedDictionary wordsFoundInOneRow = new OrderedDictionary();
+        /* Records all the words formed in this row, and their start and end tiles. */
+        List<string> words_InThisRow = new List<string>();
+        List<int> startSquares_InThisRow = new List<int>();
+        List<int> endSquares_InThisRow = new List<int>();
+
         /* Records which tiles are still available in this row. The tiles are filled 
          * up by highest-scoring word first. */
         bool[] tilesFreeInOneRow = new bool[] {true, true, true, true, true, true, true, true};
@@ -276,7 +280,9 @@ public class Board : MonoBehaviour {
 
     				/* For each combination of tiles, check if it is a word. */
     				if (testString.Length > 2 && CheckForWord(testString)) {
-    					wordsFoundInOneRow.Add(testString, new int[]{startSquare, nextSquare});
+    					words_InThisRow.Add(testString);
+    					startSquares_InThisRow.Add(startSquare);
+    					endSquares_InThisRow.Add(nextSquare);
     				}
 
     			}
@@ -284,20 +290,25 @@ public class Board : MonoBehaviour {
     		}
 
     		/* If there were no words found, we can just check the next row. */
-    		if (wordsFoundInOneRow.Count == 0) {
+    		if (words_InThisRow.Count == 0) {
     			continue;
     		}
 
+    		//Debug.Log(words_InThisRow[0]);
+    		//Debug.Log(startSquares_InThisRow[0]);
+    		//Debug.Log(endSquares_InThisRow[0]);
+
     		/* Sort the words that were found so the highest-scoring word appears first. */
-    		wordsFoundInOneRow = SortDictionary(wordsFoundInOneRow);
+    		int[] sortedOrder = SortWordsByScore(words_InThisRow);
 
-    		/* Iterate through the whole dictionary. */
-    		foreach(KeyValuePair<string, int[]> keyValuePair in wordsFoundInOneRow) {
+    		/* Iterate through the whole list. */
+    		for (int index = 0; index < sortedOrder.Length; index += 1) {
 
-    			/* Unpack the values from the entry. */
-    			string word = keyValuePair.Key;
-    			int wordStart = keyValuePair.Value[0];
-    			int wordEnd = keyValuePair.Value[1];
+    			int trueIndex = sortedOrder[index];
+
+    			string word = words_InThisRow[trueIndex];
+    			int wordStart = startSquares_InThisRow[trueIndex];
+    			int wordEnd = endSquares_InThisRow[trueIndex];
 
     			/* Make sure this word isn't overlapping with other words. */
     			if (!CheckIfWordFits(wordStart, wordEnd, tilesFreeInOneRow)) {
@@ -335,44 +346,35 @@ public class Board : MonoBehaviour {
     /* Helper Functions for FindWords() */
 
 
-    /* Helper function that takes the wordsFoundInOneRow dictionary and returns it
-     * sorted with the highest-scoring word first. */
-    OrderedDictionary SortDictionary(OrderedDictionary wordsFoundInOneRow) {
+    /* Helper function that takes the wordsFoundInOneRow dictionary and returns a
+     * list where the first element is the index of the largest scoring word,
+     * the second element is the index of the second-largest scoring word, etc.  */
+    int[] SortWordsByScore(List<string> words_InThisRow) {
+    	
+    	int[] sortedOrder = new int[words_InThisRow.Count];
 
-    	OrderedDictionary newDict = new OrderedDictionary();
+    	bool[] removed = new bool[words_InThisRow.Count];
 
-    	int maxScore = 0;
-    	KeyValuePair<string, int[]> maxScoringEntry;
+    	for (int repetitions = 0; repetitions < words_InThisRow.Count; repetitions += 1) {
 
-    	for (int i = 0; i < wordsFoundInOneRow.Count; i += 1) {
+    		int maxScore = 0;
+    		int indexOfMaxScoringWord = 0;
 
-    		maxScore = 0;
+    		for (int index = 0; index < words_InThisRow.Count; index += 1) {
 
-    		string maxScoringWord;
-    		int maxScoringWordStart;
-    		int maxScoringWordEnd;
-
-    		foreach(KeyValuePair<string, int[]> keyValuePair in wordsFoundInOneRow) {
-
-    			string word = keyValuePair.Key;
-    			int score = GetScore(word);
-    			if (score > maxScore) {
+    			int score = GetScore(words_InThisRow[index]);
+    			if (score > maxScore && !(removed[index])) {
+    				indexOfMaxScoringWord = index;
     				maxScore = score;
-    				maxScoringEntry = keyValuePair;
     			}
 
     		}
 
-    		maxScoringWord = maxScoringEntry.Key;
-    		maxScoringWordStart = maxScoringEntry.Value[0];
-    		maxScoringWordEnd = maxScoringEntry.Value[1];
-
-    		newDict.Add(maxScoringWord, new int[] {maxScoringWordStart, maxScoringWordEnd});
-    		wordsFoundInOneRow.RemoveAt(i);
-
+    		sortedOrder[repetitions] = indexOfMaxScoringWord;
+    		removed[indexOfMaxScoringWord] = true;
     	}
 
-    	return newDict;
+    	return sortedOrder;
 
     }
 
@@ -381,7 +383,7 @@ public class Board : MonoBehaviour {
     	int score = 0;
     	char[] arr = word.ToCharArray();
     	for (int i = 0; i < arr.Length; i += 1) {
-    		int positionInAplhabet = (int) arr[i] - 64;
+    		int positionInAplhabet = (int) char.ToUpper(arr[i]) - 64;
     		score += scores[positionInAplhabet - 1];
     	}
     	return 0;
@@ -549,27 +551,22 @@ public class Board : MonoBehaviour {
 
     //--------------------------------------------------------------------------------
 
-    void PrintBoard() {
+    void Test() {
 
-    	string message = "";
+    	List<string> sample = new List<string>();
 
-    	for (int row = 0; row < totalRows; row += 1) {
-    		message += " [ ";
-    		for (int col = 0; col < 8; col += 1) {
+    	sample.Add("plo");
+    	sample.Add("plozzeett");
+    	sample.Add("plog");
+    	sample.Add("plox");
+    	sample.Add("plop");
 
-    			message += ",";
+    	int[] order = SortWordsByScore(sample);
 
-    			bool tile = toDelete[col, row];
-    			
-    			message += tile;
-
-    			message += ",";
-
-    		}
-    		message += " ] ";
+    	for (int i = 0; i < order.Length; i += 1) {
+    		Debug.Log(order[i]);
     	}
 
-    	Debug.Log(message);
     }
 
     //--------------------------------------------------------------------------------
