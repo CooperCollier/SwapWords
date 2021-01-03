@@ -40,11 +40,17 @@ public class ButtonManager : MonoBehaviour {
 	public GameObject menuButton2;
     public GameObject retryButton;
 
+    public AudioSource Song;
+    public AudioSource AudioClickButton;
+
     //--------------------------------------------------------------------------------
 
     void Start() {
     	endCard.SetActive(false);
         finished = false;
+        Song = transform.GetChild(0).gameObject.GetComponent<AudioSource>();
+        AudioClickButton = transform.GetChild(1).gameObject.GetComponent<AudioSource>();
+        Song.Play();
     }
 
     void Update() {
@@ -101,19 +107,29 @@ public class ButtonManager : MonoBehaviour {
     //--------------------------------------------------------------------------------
 
     IEnumerator ShowEndCard() {
+        
     	yield return new WaitForSeconds(1);
     	endCard.SetActive(true);
     	menuButton2.SetActive(false);
     	endText.GetComponent<Text>().text = "You got " + score.ToString() + " points!";
     	Time.timeScale = 0f;
+
+        int highScore = PlayerPrefs.GetInt("HighScore");
+        if (score > highScore) {
+            PlayerPrefs.SetInt("HighScore", score);
+        }
+        PlayerPrefs.Save();
+
     }
 
     void Menu() {
+        AudioClickButton.Play();
     	Time.timeScale = 1f;
     	SceneManager.LoadScene(0);
     }
 
     void Retry() {
+        AudioClickButton.Play();
         Time.timeScale = 1f;
         SceneManager.LoadScene(1);
     }

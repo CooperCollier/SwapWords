@@ -53,6 +53,11 @@ public class Board : MonoBehaviour {
     int[] scores = new int[] {1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 5, 1, 3,
                               1, 1, 3, 10, 1, 1, 1, 1, 4, 4, 8, 4, 10};
 
+    /* Audio sources to use. */
+    public AudioSource AudioClickTile;
+    public AudioSource AudioDestroyTile;
+    public AudioSource AudioCollideTile;
+
     //--------------------------------------------------------------------------------
 
 	/* A 2D array holding the tile GameObjects for the board. */
@@ -128,6 +133,11 @@ public class Board : MonoBehaviour {
 
         /* Intialize the camera */
         camera = Camera.main;
+
+        /* Set audio sources. */
+        AudioClickTile = transform.GetChild(0).gameObject.GetComponent<AudioSource>();
+        AudioDestroyTile = transform.GetChild(1).gameObject.GetComponent<AudioSource>();
+        AudioCollideTile = transform.GetChild(2).gameObject.GetComponent<AudioSource>();
 
         /* Add all english words to the hashtable of words */
         hashTable = new Hashtable();
@@ -226,6 +236,7 @@ public class Board : MonoBehaviour {
                     /* Decrement the moves remaining, and change the state to TilesMoving. */
                     movesRemaining -= 1;
                     currentState = State.TilesMoving;
+                    AudioClickTile.Play();
 
                 }
 
@@ -240,6 +251,7 @@ public class Board : MonoBehaviour {
                 firstTileX = selectedTile.locationX;
                 firstTileY = selectedTile.locationY;
                 firstTile.GetComponent<SpriteRenderer>().color = Color.cyan;
+                AudioClickTile.Play();
             }
 
         }
@@ -261,6 +273,7 @@ public class Board : MonoBehaviour {
     			}
     		}
     	}
+        AudioCollideTile.Play();
     	currentState = State.FindWords;
     }
 
@@ -462,6 +475,8 @@ public class Board : MonoBehaviour {
 
     		}
     	}
+
+        AudioDestroyTile.Play();
 
     	/* Add score multipliers. */
     	score += (wordsFoundDuringThisTurn - 1) * 5;
