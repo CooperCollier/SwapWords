@@ -49,8 +49,6 @@ public class Board : MonoBehaviour {
      'Z'
     };
 
-
-
     /* The score associated with each letter in the game. */
     int[] scores = new int[] {1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 5, 1, 3,
                               1, 1, 3, 10, 1, 1, 1, 1, 4, 4, 8, 4, 10};
@@ -92,8 +90,9 @@ public class Board : MonoBehaviour {
     /* Check if ClearWords() is currently running, so it doesn't run twice. */
     bool wordsAreBeingCleared = false;
 
-    /* Record how many words were found on the board in this turn. */
+    /* Record how many words were found on the board in the past 2 turns. */
     int wordsFoundDuringThisTurn;
+    int wordsFoundDuringPreviousTurn;
 
     /* Check if the player made any eight-letter words. */
     bool bingo = false;
@@ -101,8 +100,6 @@ public class Board : MonoBehaviour {
     //--------------------------------------------------------------------------------
 
     void Start() {
-
-    	Test();
 
         /* Intialize the camera */
         camera = Camera.main;
@@ -121,7 +118,7 @@ public class Board : MonoBehaviour {
 
         /* Set the score and movesRemaining variables to their initial values. */
         score = 0;
-        movesRemaining = 40;
+        movesRemaining = 30;
 
     }
 
@@ -140,8 +137,9 @@ public class Board : MonoBehaviour {
         }
         
     	if (currentState == State.FindWords) {
-    		wordsFoundDuringThisTurn = FindWords();
-        	if (wordsFoundDuringThisTurn > 0) {
+    		wordsFoundDuringPreviousTurn = wordsFoundDuringThisTurn;
+    		wordsFoundDuringThisTurn += FindWords();
+        	if (wordsFoundDuringThisTurn > wordsFoundDuringPreviousTurn) {
         		currentState = State.ClearWords;
         	} else {
         		currentState = State.GetInput;
@@ -161,6 +159,10 @@ public class Board : MonoBehaviour {
     //--------------------------------------------------------------------------------
 
     void GetInput() {
+
+    	wordsFoundDuringThisTurn = 0;
+    	wordsFoundDuringPreviousTurn = 0;
+    	bingo = false;
 
         /* Determine where the mouse click happened */
     	Vector3 position = camera.ScreenToWorldPoint(Input.mousePosition);
@@ -251,17 +253,13 @@ public class Board : MonoBehaviour {
     	/* Check if this string even forms a word at all. */
         string testString;
 
-        /* Records all the words formed in this row, and their start and end tiles. */
-        List<string> words_InThisRow = new List<string>();
-        List<int> startSquares_InThisRow = new List<int>();
-        List<int> endSquares_InThisRow = new List<int>();
-
-        /* Records which tiles are still available in this row. The tiles are filled 
-         * up by highest-scoring word first. */
-        bool[] tilesFreeInOneRow = new bool[] {true, true, true, true, true, true, true, true};
-
         /* Iterate through every row on the board. */
         for (int row = 0; row < totalCols; row += 1) {
+
+        	/* Records all the words formed in this row, and their start and end tiles. */
+            List<string> words_InThisRow = new List<string>();
+            List<int> startSquares_InThisRow = new List<int>();
+            List<int> endSquares_InThisRow = new List<int>();
 
         	/* For each row, iterate through all possible starting squares in order
         	 * to check every possible combination of tiles for a word. */
@@ -294,9 +292,9 @@ public class Board : MonoBehaviour {
     			continue;
     		}
 
-    		//Debug.Log(words_InThisRow[0]);
-    		//Debug.Log(startSquares_InThisRow[0]);
-    		//Debug.Log(endSquares_InThisRow[0]);
+    		/* Records which tiles are still available in this row. The tiles are filled 
+             * up by highest-scoring word first. */
+    		bool[] tilesFreeInOneRow = new bool[] {true, true, true, true, true, true, true, true};
 
     		/* Sort the words that were found so the highest-scoring word appears first. */
     		int[] sortedOrder = SortWordsByScore(words_InThisRow);
@@ -324,14 +322,14 @@ public class Board : MonoBehaviour {
     				tiles[tile, row].GetComponent<SpriteRenderer>().color = Color.green;
 
     				/* Check if a bingo appeared. */
-    				if ((wordStart == 0) && (wordEnd == totalCols)) {
+    				if ((wordStart == 0) && (wordEnd == totalCols - 1)) {
     					bingo = true;
     				}
 
-    				/* update the final return value. */
-    				wordsFoundOnEntireBoard += 1;
-
     			}
+
+    			/* update the final return value. */
+    			wordsFoundOnEntireBoard += 1;
 
     		}
 
@@ -386,7 +384,7 @@ public class Board : MonoBehaviour {
     		int positionInAplhabet = (int) char.ToUpper(arr[i]) - 64;
     		score += scores[positionInAplhabet - 1];
     	}
-    	return 0;
+    	return score;
     }
 
     /* Checks if any squares between start and end are marked 'false' on
@@ -437,13 +435,11 @@ public class Board : MonoBehaviour {
     	score += (wordsFoundDuringThisTurn - 1) * 10;
     	if (bingo) {
     		score += 50;
+    		bingo = false;
     	}
 
     	toDelete = new bool[totalCols, totalCols];
     	currentState = State.DropTiles;
-
-    	wordsFoundDuringThisTurn = 0;
-    	bingo = false;
 
     	wordsAreBeingCleared = false;
 
@@ -547,26 +543,6 @@ public class Board : MonoBehaviour {
         } else {
             return false;
         }
-    }
-
-    //--------------------------------------------------------------------------------
-
-    void Test() {
-
-    	List<string> sample = new List<string>();
-
-    	sample.Add("plo");
-    	sample.Add("plozzeett");
-    	sample.Add("plog");
-    	sample.Add("plox");
-    	sample.Add("plop");
-
-    	int[] order = SortWordsByScore(sample);
-
-    	for (int i = 0; i < order.Length; i += 1) {
-    		Debug.Log(order[i]);
-    	}
-
     }
 
     //--------------------------------------------------------------------------------
