@@ -116,11 +116,11 @@ public class Board : MonoBehaviour {
     bool wordsAreBeingCleared = false;
 
     /* Record how many words were found on the board in the past 2 turns. */
-    int wordsFoundDuringThisTurn;
-    int wordsFoundDuringPreviousTurn;
+    public int wordsFoundDuringThisTurn;
+    public int wordsFoundDuringPreviousTurn;
 
     /* Check if the player made any eight-letter words. */
-    bool bingo = false;
+    public bool bingo = false;
 
     //--------------------------------------------------------------------------------
 
@@ -152,6 +152,9 @@ public class Board : MonoBehaviour {
     void Update() {
 
     	if (currentState == State.GetInput) {
+    		wordsFoundDuringThisTurn = 0;
+    		wordsFoundDuringPreviousTurn = 0;
+    		bingo = false;
             if (Input.GetMouseButtonDown(0)) {
     		    GetInput();  
             }
@@ -184,10 +187,6 @@ public class Board : MonoBehaviour {
     //--------------------------------------------------------------------------------
 
     void GetInput() {
-
-    	wordsFoundDuringThisTurn = 0;
-    	wordsFoundDuringPreviousTurn = 0;
-    	bingo = false;
 
         /* Determine where the mouse click happened */
     	Vector3 position = camera.ScreenToWorldPoint(Input.mousePosition);
@@ -465,9 +464,9 @@ public class Board : MonoBehaviour {
     	}
 
     	/* Add score multipliers. */
-    	score += (wordsFoundDuringThisTurn - 1) * 10;
+    	score += (wordsFoundDuringThisTurn - 1) * 5;
     	if (bingo) {
-    		score += 50;
+    		score += 100;
     		bingo = false;
     	}
 
@@ -577,6 +576,14 @@ public class Board : MonoBehaviour {
 
     public int ReportMoves() {
         return movesRemaining;
+    }
+
+    public int ReportBonus() {
+    	return (wordsFoundDuringThisTurn - 1);
+    }
+
+    public bool ReportBingo() {
+    	return bingo;
     }
 
     public bool CheckIfGameFinished() {

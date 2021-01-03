@@ -16,6 +16,16 @@ public class ButtonManager : MonoBehaviour {
 	/* The actual moves remaining. */
 	public int movesRemaining;
 
+    /* UI Text displaying player's score multiplier. */
+    public GameObject bonusText;
+    /* The player's score multiplier. */
+    public int bonus;
+
+    /* UI Text appearing if the player made a bingo. */
+    public GameObject bingoText;
+    /* Check if there is a bingo. */
+    public bool bingo;
+
 	/* Check whether the game is finished. */
 	public static bool finished;
 
@@ -49,6 +59,36 @@ public class ButtonManager : MonoBehaviour {
         /* Get the moves remaining from the board script. */
     	movesRemaining = board.ReportMoves();
     	movesText.GetComponent<Text>().text = "Moves: " + movesRemaining.ToString();
+
+        /* Get the bonus value from the board script. */
+        bonus = board.ReportBonus();
+        if (bonus == 1) {
+            bonusText.GetComponent<Text>().text = "Double! + " + (bonus * 5).ToString();
+        } else if (bonus == 2) {
+            bonusText.GetComponent<Text>().text = "Triple! + " + (bonus * 5).ToString();
+        } else if (bonus == 3) {
+            bonusText.GetComponent<Text>().text = "Quadruple! + " + (bonus * 5).ToString();
+        } else if (bonus == 4) {
+            bonusText.GetComponent<Text>().text = "Quintuple! + " + (bonus * 5).ToString();
+        } else if (bonus == 5) {
+            bonusText.GetComponent<Text>().text = "Sextuple! + " + (bonus * 5).ToString();
+        } else if (bonus == 6) {
+            bonusText.GetComponent<Text>().text = "Septuple! + " + (bonus * 5).ToString();
+        } else if (bonus == 7) {
+            bonusText.GetComponent<Text>().text = "Octuple! + " + (bonus * 5).ToString();
+        } else if (bonus > 7) {
+            bonusText.GetComponent<Text>().text = "MEGA BONUS! + " + (bonus * 5).ToString();
+        } else {
+            bonusText.GetComponent<Text>().text = "";
+        }
+
+        /* Check the bingo value from the board script. */
+        bingo = board.ReportBingo();
+        if (bingo) {
+            bingoText.GetComponent<Text>().text = "BINGO! +100";
+        } else {
+            bingoText.GetComponent<Text>().text = "";
+        }
 
         /* Check if the game is finished. If it is, show the end-card. */
     	if (board.CheckIfGameFinished()) {
