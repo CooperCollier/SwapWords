@@ -66,9 +66,10 @@ public class Board : MonoBehaviour {
 	/* Tile prefab to use for Instantiate() */
 	public Tile tile;
 
-    /* Two variables that need to be reported to the ButtonManager script. */
+    /* Three variables that need to be reported to the ButtonManager script. */
     public static int score;
     public static int movesRemaining;
+    public static bool finished;
 
     /* Records the current state of the board at each turn. */
     enum State { GetInput, TilesMoving, FindWords, ClearWords, DropTiles }
@@ -154,12 +155,18 @@ public class Board : MonoBehaviour {
         /* Set the score and movesRemaining variables to their initial values. */
         score = 0;
         movesRemaining = 30;
+        finished = false;
 
     }
 
     //--------------------------------------------------------------------------------
 
     void Update() {
+
+    	if (movesRemaining <= 0 && currentState == State.GetInput) {
+           finished =  true;
+        }
+    	if (finished) { return; }
 
     	if (currentState == State.GetInput) {
     		wordsFoundDuringThisTurn = 0;
@@ -602,11 +609,7 @@ public class Board : MonoBehaviour {
     }
 
     public bool CheckIfGameFinished() {
-        if (movesRemaining <= 0 && currentState == State.GetInput) {
-            return true;
-        } else {
-            return false;
-        }
+        return finished;
     }
 
     //--------------------------------------------------------------------------------

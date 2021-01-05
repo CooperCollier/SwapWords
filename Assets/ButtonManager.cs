@@ -69,7 +69,7 @@ public class ButtonManager : MonoBehaviour {
         /* Get the bonus value from the board script. */
         bonus = board.ReportBonus();
         if (bonus == 1) {
-            bonusText.GetComponent<Text>().text = "Double! + " + (bonus * 5).ToString();
+        	bonusText.GetComponent<Text>().text = "Double! + " + (bonus * 5).ToString();
         } else if (bonus == 2) {
             bonusText.GetComponent<Text>().text = "Triple! + " + (bonus * 5).ToString();
         } else if (bonus == 3) {
