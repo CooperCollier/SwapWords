@@ -1321,9 +1321,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Click on two tiles to swap them. \nMake tiles spell out words to score
-    points!\nRare letters will score more points.\nMake multiple words on the same
-    turn for bonus points!"
+  m_Text: "Click on adjacent tiles to swap them. \nMake tiles spell out words to
+    score points!\nRare letters will score more points.\nMake multiple words on the
+    same turn for bonus points!"
 --- !u!222 &1953464386
 CanvasRenderer:
   m_ObjectHideFlags: 0

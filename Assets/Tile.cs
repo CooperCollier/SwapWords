@@ -14,9 +14,15 @@ public class Tile : MonoBehaviour {
 	/* The (x, y) coordinate of this tile on the board. */
 	public int locationX, locationY;
 
+    /* The tile sprite. */
+    public SpriteRenderer sprite;
+
 	/* GameObject holding this tile's text, and the corresponding text component. */
 	public GameObject textObject;
 	public Text text;
+
+    /* GameObject holding the tile's particle effect */
+    public ParticleSystem particles;
 
     /* Check wether the game has started. The tile sets its letter and position beforehand. */
     bool gameStarted = false;
@@ -38,10 +44,14 @@ public class Tile : MonoBehaviour {
 
         if (!gameStarted) {
 
-            /* Run thos only once, on the first frame after the tile is created. */
+            /* Run this only once, on the first frame after the tile is created. */
             textObject = transform.GetChild(0).gameObject.transform.GetChild(0).gameObject;
             text = textObject.GetComponent<Text>();
             text.text = letter.ToString();
+
+            particles = transform.GetChild(1).gameObject.GetComponent<ParticleSystem>();
+
+            sprite = GetComponent<SpriteRenderer>();
 
             transform.position = new Vector3(TileToWorldSpace(locationX), TileToWorldSpace(locationY), 0);
             gameStarted = true;
@@ -83,6 +93,16 @@ public class Tile : MonoBehaviour {
         destinationX = TileToWorldSpace(destination[0]);
         destinationY = TileToWorldSpace(destination[1]);
         moving = true;
+    }
+
+    //--------------------------------------------------------------------------------
+
+    /* This function is called by the board script when it destroys the tile. */
+    void DestroySelf() {
+        sprite.enabled = false;
+        textObject.SetActive(false);
+        particles.Play();
+        Destroy(gameObject, particles.duration);
     }
 
     //--------------------------------------------------------------------------------
