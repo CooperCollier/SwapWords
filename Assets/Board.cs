@@ -476,7 +476,7 @@ public class Board : MonoBehaviour {
     			if (toDelete[col, row]) {
     				Tile tileToDelete = tiles[col, row];
                     score += tileToDelete.points;
-    				Destroy(tileToDelete.gameObject);
+                    tileToDelete.SendMessage("DestroySelf");
     				tiles[col, row] = null;
     			}
 
