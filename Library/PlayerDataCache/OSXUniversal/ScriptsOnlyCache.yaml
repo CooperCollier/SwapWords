@@ -83,6 +83,10 @@ ScriptsOnlyBuild:
       Script: {instanceID: 0}
     - Class: 196
       Script: {instanceID: 0}
+    - Class: 198
+      Script: {instanceID: 0}
+    - Class: 199
+      Script: {instanceID: 0}
     - Class: 212
       Script: {instanceID: 0}
     - Class: 213
@@ -551,7 +555,7 @@ ScriptsOnlyBuild:
     className: TMP_StyleSheet
   - hash:
       serializedVersion: 2
-      Hash: 22c9d0fe0cc8614cd6ec584e95966023
+      Hash: db0604af706d37126e20e2be95c4aa6f
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: Tile

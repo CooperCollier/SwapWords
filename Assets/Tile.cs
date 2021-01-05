@@ -102,7 +102,7 @@ public class Tile : MonoBehaviour {
         sprite.enabled = false;
         textObject.SetActive(false);
         particles.Play();
-        Destroy(gameObject, particles.duration);
+        Destroy(gameObject, particles.main.duration);
     }
 
     //--------------------------------------------------------------------------------
