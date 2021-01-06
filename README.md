@@ -1,8 +1,8 @@
 # SwapWords
 
-A minimalistic puzzle game I'm making in C# with Unity. The gameplay is like Candy Crush crossed with Scrabble.
+A minimalistic puzzle game I made in C# with Unity. The gameplay is like Candy Crush crossed with Scrabble.
 
-This page will be updated when the game is done.
+Play the finished game here: https://pixelmationgames.itch.io/swapwords
 
 Everything in this game is made by me except for the font (Mond) and the sound effects (Kenney Asset Library).
 
