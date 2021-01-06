@@ -142,7 +142,7 @@ public class Board : MonoBehaviour {
 
         /* Add all english words to the hashtable of words */
         hashTable = new Hashtable();
-        string[] lines = System.IO.File.ReadAllLines("Assets/allWords.txt");
+        string[] lines = System.IO.File.ReadAllLines(Application.streamingAssetsPath + "/allWords.txt");
         foreach (string line in lines) { hashTable.Add(line, true);}
 
         /* Generate the board randomly, then remove any words that may have formed */
