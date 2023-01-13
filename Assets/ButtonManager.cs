@@ -44,6 +44,8 @@ public class ButtonManager : MonoBehaviour {
 	public GameObject menuButton2;
     public GameObject retryButton;
 
+    public GameObject musicButton;
+
     public AudioSource Song;
     public AudioSource AudioClickButton;
 
@@ -54,7 +56,20 @@ public class ButtonManager : MonoBehaviour {
         finished = false;
         Song = transform.GetChild(0).gameObject.GetComponent<AudioSource>();
         AudioClickButton = transform.GetChild(1).gameObject.GetComponent<AudioSource>();
-        Song.Play();
+
+        if (!PlayerPrefs.HasKey("PlaySong")) {
+        	PlayerPrefs.SetInt("PlaySong", 1);
+        	PlayerPrefs.Save();
+        }
+
+        int playSong = PlayerPrefs.GetInt("PlaySong");
+    	if (playSong != 0) {
+            Song.Play();
+    		musicButton.GetComponent<Image>().color = Color.white;
+    	} else {
+    		musicButton.GetComponent<Image>().color = Color.grey;
+    	}
+
     }
 
     void Update() {
@@ -118,9 +133,19 @@ public class ButtonManager : MonoBehaviour {
     	endText.GetComponent<Text>().text = "You got " + score.ToString() + " points!";
     	Time.timeScale = 0f;
 
-        int highScore = PlayerPrefs.GetInt("HighScore");
-        if (score > highScore) {
-            PlayerPrefs.SetInt("HighScore", score);
+        int highScoreNormal = PlayerPrefs.GetInt("HighScoreNormal");
+        int highScoreHard = PlayerPrefs.GetInt("HighScoreHard");
+
+        int hardMode = PlayerPrefs.GetInt("HardMode");
+
+        if (hardMode == 0) {
+            if (score > highScoreNormal) {
+                PlayerPrefs.SetInt("HighScoreNormal", score);
+            }
+        } else {
+            if (score > highScoreHard) {
+                PlayerPrefs.SetInt("HighScoreHard", score);
+            }
         }
         PlayerPrefs.Save();
 
@@ -136,6 +161,21 @@ public class ButtonManager : MonoBehaviour {
         AudioClickButton.Play();
         Time.timeScale = 1f;
         SceneManager.LoadScene(1);
+    }
+
+    public void ToggleMusic() {
+    	int playSong = PlayerPrefs.GetInt("PlaySong");
+    	if (playSong == 0) {
+    		playSong = 1;
+    		musicButton.GetComponent<Image>().color = Color.white;
+    		Song.Play();
+    	} else {
+    		playSong = 0;
+    		musicButton.GetComponent<Image>().color = Color.grey;
+            Song.Stop();
+    	}
+    	PlayerPrefs.SetInt("PlaySong", playSong);
+    	PlayerPrefs.Save();
     }
 
     /* BoardTop is the height of the board in world space units divided by the height

@@ -130,6 +130,9 @@ public class Board : MonoBehaviour {
 
     public ButtonManager buttonManager;
 
+    public int hardMode;
+    public int MINIMUM_WORD_LENGTH;
+
     //--------------------------------------------------------------------------------
 
     void Start() {
@@ -153,6 +156,12 @@ public class Board : MonoBehaviour {
         Vector3 lowerLeft = camera.ScreenToWorldPoint(new Vector3(0, 0, camera.nearClipPlane));
         buttonManager.SendMessage("GetBoardTopLocation", boardHeight / (upperRight.y - lowerLeft.y));
 
+        /* Check if the game is in hard mode or not. 
+         * In hardmode, words must be at least 4 letters, but the player gets doubled moves. */
+        int hardMode = PlayerPrefs.GetInt("HardMode");
+        MINIMUM_WORD_LENGTH = 3;
+        if (hardMode != 0) { MINIMUM_WORD_LENGTH = 4; }
+
         /* Set audio sources. */
         AudioClickTile = transform.GetChild(0).gameObject.GetComponent<AudioSource>();
         AudioDestroyTile = transform.GetChild(1).gameObject.GetComponent<AudioSource>();
@@ -173,6 +182,7 @@ public class Board : MonoBehaviour {
         /* Set the score and movesRemaining variables to their initial values. */
         score = 0;
         movesRemaining = 30;
+        if (hardMode != 0) { movesRemaining = 60; }
         finished = false;
 
     }
@@ -343,7 +353,7 @@ public class Board : MonoBehaviour {
     				testString += tiles[nextSquare, row].letter.ToString();
 
     				/* For each combination of tiles, check if it is a word. */
-    				if (testString.Length > 2 && CheckForWord(testString)) {
+    				if (testString.Length >= MINIMUM_WORD_LENGTH && CheckForWord(testString)) {
     					words_InThisRow.Add(testString);
     					startSquares_InThisRow.Add(startSquare);
     					endSquares_InThisRow.Add(nextSquare);
