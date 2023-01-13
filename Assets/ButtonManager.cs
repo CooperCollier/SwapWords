@@ -6,6 +6,10 @@ using UnityEngine.SceneManagement;
 
 public class ButtonManager : MonoBehaviour {
 
+    public Camera camera;
+
+    public GameObject sideBox;
+
 	/* UI Text displaying the score. */
 	public GameObject scoreText;
 	/* The actual score. */

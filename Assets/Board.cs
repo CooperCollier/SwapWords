@@ -135,6 +135,16 @@ public class Board : MonoBehaviour {
         /* Intialize the camera */
         camera = Camera.main;
 
+        /* Set board location to the bottom center of the screen. */
+        SpriteRenderer spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        float boardHeight = spriteRenderer.bounds.size.y;
+        float boardWidth = spriteRenderer.bounds.size.x;
+		camera.orthographicSize = (boardWidth * ((float) Screen.height / (float) Screen.width) * 0.5f);
+        Vector3 screenCenter = camera.ScreenToWorldPoint(new Vector3(camera.pixelWidth / 2, camera.pixelHeight / 2, camera.nearClipPlane));
+        Vector3 screenBottom = camera.ScreenToWorldPoint(new Vector3(camera.pixelWidth / 2, 0, camera.nearClipPlane));
+        float yOffset = (screenCenter.y - screenBottom.y) - (boardHeight / 2);
+		camera.transform.position = new Vector3(transform.position.x, transform.position.y + yOffset, camera.transform.position.z);
+
         /* Set audio sources. */
         AudioClickTile = transform.GetChild(0).gameObject.GetComponent<AudioSource>();
         AudioDestroyTile = transform.GetChild(1).gameObject.GetComponent<AudioSource>();
