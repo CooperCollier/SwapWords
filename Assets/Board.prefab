@@ -76,7 +76,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 256, y: 256}
+  m_Size: {x: 2.58, y: 2.58}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -94,12 +94,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 792c8f51a10004dec9c24aa14eb02864, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tile: {fileID: 5285520752660960743, guid: 2072a6cab0eb54bdcbd93bc7f82ec79e, type: 3}
   camera: {fileID: 0}
+  AudioClickTile: {fileID: 0}
+  AudioDestroyTile: {fileID: 0}
+  AudioCollideTile: {fileID: 0}
+  tile: {fileID: 5285520752660960743, guid: 2072a6cab0eb54bdcbd93bc7f82ec79e, type: 3}
   firstTile: {fileID: 0}
   firstTileX: 0
   firstTileY: 0
   secondTile: {fileID: 0}
   secondTileX: 0
   secondTileY: 0
-  UI: {fileID: 2045648850990123028, guid: 8a3c3174e281f47c086c456a887ee299, type: 3}
+  wordsFoundDuringThisTurn: 0
+  wordsFoundDuringPreviousTurn: 0
+  bingo: 0
+  buttonManager: {fileID: 0}

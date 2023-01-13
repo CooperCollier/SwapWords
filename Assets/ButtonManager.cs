@@ -138,6 +138,15 @@ public class ButtonManager : MonoBehaviour {
         SceneManager.LoadScene(1);
     }
 
+    /* BoardTop is the height of the board in world space units divided by the height
+     * of the screen in world space units. 
+     * The purpose of this function is to make sure that the end card is centered on the board. */
+    public void GetBoardTopLocation(float boardTop) {
+        RectTransform endCardTransform = endCard.GetComponent<RectTransform>();
+        endCardTransform.anchorMin = new Vector2(0.1f, (boardTop * 0.1f));
+        endCardTransform.anchorMax = new Vector2(0.9f, (boardTop * 0.9f));
+    }
+
     //--------------------------------------------------------------------------------
 
 }

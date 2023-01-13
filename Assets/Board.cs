@@ -128,6 +128,8 @@ public class Board : MonoBehaviour {
     /* Check if the player made any eight-letter words. */
     public bool bingo = false;
 
+    public ButtonManager buttonManager;
+
     //--------------------------------------------------------------------------------
 
     void Start() {
@@ -144,6 +146,12 @@ public class Board : MonoBehaviour {
         Vector3 screenBottom = camera.ScreenToWorldPoint(new Vector3(camera.pixelWidth / 2, 0, camera.nearClipPlane));
         float yOffset = (screenCenter.y - screenBottom.y) - (boardHeight / 2);
 		camera.transform.position = new Vector3(transform.position.x, transform.position.y + yOffset, camera.transform.position.z);
+
+        /* Tell button manager where the board is located so that the
+         * game over screen will appear in the center of the board. */
+        Vector3 upperRight = camera.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, camera.nearClipPlane));
+        Vector3 lowerLeft = camera.ScreenToWorldPoint(new Vector3(0, 0, camera.nearClipPlane));
+        buttonManager.SendMessage("GetBoardTopLocation", boardHeight / (upperRight.y - lowerLeft.y));
 
         /* Set audio sources. */
         AudioClickTile = transform.GetChild(0).gameObject.GetComponent<AudioSource>();
@@ -232,7 +240,9 @@ public class Board : MonoBehaviour {
             if (isTileSelected) {
 
                 /* Prepare to swap the tiles. */
-            	firstTile.GetComponent<SpriteRenderer>().color = Color.white;
+                Color newColor;
+                ColorUtility.TryParseHtmlString("#fbf5ef", out newColor);
+            	firstTile.GetComponent<SpriteRenderer>().color = newColor;
                 isTileSelected = false;
                 secondTile = selectedTile;
                 secondTileX = selectedTile.locationX;
@@ -267,7 +277,9 @@ public class Board : MonoBehaviour {
                 firstTile = selectedTile;
                 firstTileX = selectedTile.locationX;
                 firstTileY = selectedTile.locationY;
-                firstTile.GetComponent<SpriteRenderer>().color = Color.cyan;
+                Color newColor;
+                ColorUtility.TryParseHtmlString("#f2d3ab", out newColor);
+                firstTile.GetComponent<SpriteRenderer>().color = newColor;
                 AudioClickTile.Play();
             }
 
@@ -373,7 +385,9 @@ public class Board : MonoBehaviour {
     				/* Update the toDelete and tilesFreeInOneRow arrays. */
     				tilesFreeInOneRow[tile] = false;
     				toDelete[tile, row] = true;
-    				tiles[tile, row].GetComponent<SpriteRenderer>().color = Color.green;
+                    Color newColor;
+                    ColorUtility.TryParseHtmlString("#c69fa5", out newColor);
+    				tiles[tile, row].GetComponent<SpriteRenderer>().color = newColor;
 
     				/* Check if a bingo appeared. */
     				if ((wordStart == 0) && (wordEnd == totalCols - 1)) {
