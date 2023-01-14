@@ -128,8 +128,6 @@ public class Board : MonoBehaviour {
     /* Check if the player made any eight-letter words. */
     public bool bingo = false;
 
-    public ButtonManager buttonManager;
-
     public int hardMode;
     public int MINIMUM_WORD_LENGTH;
 
@@ -140,21 +138,21 @@ public class Board : MonoBehaviour {
         /* Intialize the camera */
         camera = Camera.main;
 
-        /* Set board location to the bottom center of the screen. */
+        /* Set camera size to exactly fit the board height. */
         SpriteRenderer spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         float boardHeight = spriteRenderer.bounds.size.y;
         float boardWidth = spriteRenderer.bounds.size.x;
-		camera.orthographicSize = (boardWidth * ((float) Screen.height / (float) Screen.width) * 0.5f);
-        Vector3 screenCenter = camera.ScreenToWorldPoint(new Vector3(camera.pixelWidth / 2, camera.pixelHeight / 2, camera.nearClipPlane));
-        Vector3 screenBottom = camera.ScreenToWorldPoint(new Vector3(camera.pixelWidth / 2, 0, camera.nearClipPlane));
-        float yOffset = (screenCenter.y - screenBottom.y) - (boardHeight / 2);
-		camera.transform.position = new Vector3(transform.position.x, transform.position.y + yOffset, camera.transform.position.z);
+		camera.orthographicSize = (boardHeight * 0.5f);
 
-        /* Tell button manager where the board is located so that the
-         * game over screen will appear in the center of the board. */
-        Vector3 upperRight = camera.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, camera.nearClipPlane));
-        Vector3 lowerLeft = camera.ScreenToWorldPoint(new Vector3(0, 0, camera.nearClipPlane));
-        buttonManager.SendMessage("GetBoardTopLocation", boardHeight / (upperRight.y - lowerLeft.y));
+		/* Get the width of the screen in world space units. */
+        Vector3 screenLeft = camera.ScreenToWorldPoint(new Vector3(0, 0, camera.nearClipPlane));
+        Vector3 screenRight = camera.ScreenToWorldPoint(new Vector3(camera.pixelWidth, camera.pixelHeight, camera.nearClipPlane));
+        float screenWidth = screenRight.x - screenLeft.x;
+
+        /* Move the camera's x-position so that the distance from the board's left edge to the sideBox (on the left)
+         * equals the distance from the board's right edge to the right side of the screen. */
+        float xOffset = (screenWidth) * 0.15f;
+		camera.transform.position = new Vector3(transform.position.x - xOffset, transform.position.y, camera.transform.position.z);
 
         /* Check if the game is in hard mode or not. 
          * In hardmode, words must be at least 4 letters, but the player gets doubled moves. */
