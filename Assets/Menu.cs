@@ -43,6 +43,7 @@ public class Menu : MonoBehaviour {
     }
 
     public void HardModeToggle() {
+        AudioClickButton.Play();
     	int hardMode = PlayerPrefs.GetInt("HardMode");
     	if (hardMode == 0) {
     		PlayerPrefs.SetInt("HardMode", 1);

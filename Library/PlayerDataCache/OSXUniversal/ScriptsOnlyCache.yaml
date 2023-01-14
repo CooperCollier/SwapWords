@@ -183,7 +183,7 @@ ScriptsOnlyBuild:
     className: TMP_Dropdown
   - hash:
       serializedVersion: 2
-      Hash: e25237dd63a476b3050241d43234d93c
+      Hash: c5458cc5cdc55685fd65ee93f35b4c76
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: Menu
@@ -207,7 +207,7 @@ ScriptsOnlyBuild:
     className: GroupTrack
   - hash:
       serializedVersion: 2
-      Hash: f47ed1b3294af5a8c82590c584403f62
+      Hash: 89f94c4887e7473b62c25d12d0d37ede
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: Board
@@ -417,7 +417,7 @@ ScriptsOnlyBuild:
     className: SpriteSkinEntity
   - hash:
       serializedVersion: 2
-      Hash: 2ab7a3b9cecb98535a74d6e14a4beb0e
+      Hash: 5a7a58a7b2f52aa1a2a333352df26640
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: ButtonManager
@@ -659,4 +659,4 @@ ScriptsOnlyBuild:
   scenePathNames:
   - Assets/Menu.unity
   - Assets/Main.unity
-  playerPath: /Users/cooper/Desktop/unity/SwapWords/build1.app
+  playerPath: /Users/cooper/Desktop/Archives/Unity/SwapWords/SwapWords.app

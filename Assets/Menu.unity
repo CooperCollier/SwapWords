@@ -1279,7 +1279,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 'Tap on two adjacent tiles to swap them.
+  m_Text: 'Click on two adjacent tiles to swap them.
 
     Make tiles spell out words
     to score points.

@@ -65,7 +65,7 @@ public class ButtonManager : MonoBehaviour {
 
         int playSong = PlayerPrefs.GetInt("PlaySong");
     	if (playSong != 0) {
-            Song.Play();
+            if (!Song.isPlaying) { Song.Play(); }
     		musicButton.GetComponent<Image>().color = Color.white;
     	} else {
     		musicButton.GetComponent<Image>().color = Color.grey;
@@ -89,21 +89,21 @@ public class ButtonManager : MonoBehaviour {
         /* Get the bonus value from the board script. */
         bonus = board.ReportBonus();
         if (bonus == 1) {
-        	bonusText.GetComponent<Text>().text = "Double! + " + (bonus * 5).ToString();
+        	bonusText.GetComponent<Text>().text = "Double! + " + (bonus * 3).ToString();
         } else if (bonus == 2) {
-            bonusText.GetComponent<Text>().text = "Triple! + " + (bonus * 5).ToString();
+            bonusText.GetComponent<Text>().text = "Triple! + " + (bonus * 3).ToString();
         } else if (bonus == 3) {
-            bonusText.GetComponent<Text>().text = "Quadruple! + " + (bonus * 5).ToString();
+            bonusText.GetComponent<Text>().text = "Quadruple! + " + (bonus * 3).ToString();
         } else if (bonus == 4) {
-            bonusText.GetComponent<Text>().text = "Quintuple! + " + (bonus * 5).ToString();
+            bonusText.GetComponent<Text>().text = "Quintuple! + " + (bonus * 3).ToString();
         } else if (bonus == 5) {
-            bonusText.GetComponent<Text>().text = "Sextuple! + " + (bonus * 5).ToString();
+            bonusText.GetComponent<Text>().text = "Sextuple! + " + (bonus * 3).ToString();
         } else if (bonus == 6) {
-            bonusText.GetComponent<Text>().text = "Septuple! + " + (bonus * 5).ToString();
+            bonusText.GetComponent<Text>().text = "Septuple! + " + (bonus * 3).ToString();
         } else if (bonus == 7) {
-            bonusText.GetComponent<Text>().text = "Octuple! + " + (bonus * 5).ToString();
+            bonusText.GetComponent<Text>().text = "Octuple! + " + (bonus * 3).ToString();
         } else if (bonus > 7) {
-            bonusText.GetComponent<Text>().text = "MEGA BONUS! + " + (bonus * 5).ToString();
+            bonusText.GetComponent<Text>().text = "MEGA BONUS! + " + (bonus * 3).ToString();
         } else {
             bonusText.GetComponent<Text>().text = "";
         }
@@ -153,6 +153,7 @@ public class ButtonManager : MonoBehaviour {
     }
 
     void Menu() {
+        Song.Stop();
         AudioClickButton.Play();
     	Time.timeScale = 1f;
     	SceneManager.LoadScene(0);

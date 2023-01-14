@@ -518,7 +518,7 @@ public class Board : MonoBehaviour {
         AudioDestroyTile.Play();
 
     	/* Add score multipliers. */
-    	score += (wordsFoundDuringThisTurn - 1) * 5;
+    	score += (wordsFoundDuringThisTurn - 1) * 3;
     	if (bingo) {
     		score += 100;
     		bingo = false;
